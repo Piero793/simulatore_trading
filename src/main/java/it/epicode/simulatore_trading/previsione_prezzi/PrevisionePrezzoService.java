@@ -2,6 +2,8 @@ package it.epicode.simulatore_trading.previsione_prezzi;
 
 import it.epicode.simulatore_trading.azioni.Azione;
 import it.epicode.simulatore_trading.azioni.AzioneRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,7 +37,7 @@ public class PrevisionePrezzoService {
 
             System.out.println("✅ Nuovo prezzo registrato per " + azione.getNome() + ": " + nuovoPrezzo);
 
-            //  Controllo se serve un alert
+            // Controllo se serve un alert
             verificaPrevisione(azione.getId(), nuovoPrezzo);
         }
     }
@@ -44,15 +46,15 @@ public class PrevisionePrezzoService {
         return previsionePrezzoRepository.findByAzione(azione).size();
     }
 
-    //  Metodo per prevedere il prezzo di un asset specifico
+    // Metodo per prevedere il prezzo di un asset specifico
     public double prevediPrezzoPerAzione(Long azioneId) {
         Azione azione = azioneRepository.findById(azioneId)
-                .orElseThrow(() -> new RuntimeException("Errore: Azione non trovata!"));
+                .orElseThrow(() -> new EntityNotFoundException("Errore: Azione non trovata!"));
 
         List<PrevisionePrezzo> datiStorici = previsionePrezzoRepository.findByAzione(azione);
 
         if (datiStorici.isEmpty()) {
-            throw new IllegalArgumentException("Errore: Nessun dato disponibile per questa azione!");
+            throw new ConstraintViolationException("Errore: Nessun dato disponibile per questa azione!", null);
         }
 
         SimpleRegression regression = new SimpleRegression();
@@ -73,11 +75,12 @@ public class PrevisionePrezzoService {
         return Double.isNaN(previsioneRegressione) ? mediaMobile : (previsioneRegressione + mediaMobile) / 2;
     }
 
-    //  Controllo le variazioni per attivare un alert
+    // Controllo le variazioni per attivare un alert
     public void verificaPrevisione(Long azioneId, double nuovaPrevisione) {
-        List<PrevisionePrezzo> datiStorici = previsionePrezzoRepository.findByAzione(
-                azioneRepository.findById(azioneId).orElseThrow(() -> new RuntimeException("Errore: Azione non trovata!"))
-        );
+        Azione azione = azioneRepository.findById(azioneId)
+                .orElseThrow(() -> new EntityNotFoundException("Errore: Azione non trovata!"));
+
+        List<PrevisionePrezzo> datiStorici = previsionePrezzoRepository.findByAzione(azione);
 
         if (datiStorici.size() < 2) return; // Se ci sono pochi dati, non attiviamo un alert
 
@@ -85,7 +88,7 @@ public class PrevisionePrezzoService {
         double variazione = Math.abs((nuovaPrevisione - ultimaPrevisione) / ultimaPrevisione);
 
         if (variazione > SOGLIA_VARIAZIONE) {
-            System.out.println("🚨 ALERT: La previsione di " + datiStorici.getFirst().getAzione().getNome() + " è cambiata significativamente! Nuovo prezzo previsto: "
+            System.out.println("🚨 ALERT: La previsione di " + azione.getNome() + " è cambiata significativamente! Nuovo prezzo previsto: "
                     + String.format("%.2f", nuovaPrevisione) + "€ (variazione del " + String.format("%.2f", variazione * 100) + "%)");
         }
     }

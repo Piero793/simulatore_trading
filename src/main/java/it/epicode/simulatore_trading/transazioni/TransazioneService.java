@@ -4,6 +4,8 @@ import it.epicode.simulatore_trading.azioni.Azione;
 import it.epicode.simulatore_trading.azioni.AzioneRepository;
 import it.epicode.simulatore_trading.portfolio.Portfolio;
 import it.epicode.simulatore_trading.portfolio.PortfolioRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,33 +37,33 @@ public class TransazioneService {
     }
 
     public TransazioneResponse salvaTransazione(TransazioneRequest request) {
-        //  Valido che il nome utente sia presente
+        //  Validazione del nome utente
         if (request.getNomeUtente() == null || request.getNomeUtente().isEmpty()) {
-            throw new RuntimeException("Errore: Nome utente non fornito!");
+            throw new ConstraintViolationException("Il nome utente è obbligatorio!", null);
         }
 
-        // Recupero l'azione dal database
+        //  Recupero l'azione dal database
         Azione azione = azioneRepository.findById(request.getAzioneId())
-                .orElseThrow(() -> new RuntimeException("Azione non trovata"));
+                .orElseThrow(() -> new EntityNotFoundException("Azione non trovata"));
 
-        // Creo la transazione e salvo la quantità correttamente
+        //  Creo la transazione e salvo la quantità correttamente
         Transazione nuovaTransazione = new Transazione();
         BeanUtils.copyProperties(request, nuovaTransazione);
         nuovaTransazione.setAzione(azione);
         nuovaTransazione.setQuantita(request.getQuantita());
 
-        // Salvo la transazione nel database
+        //  Salvo la transazione nel database
         Transazione salvata = transazioneRepository.save(nuovaTransazione);
 
-        // Recupero il portfolio dell'utente
+        //  Recupero il portfolio dell'utente
         Portfolio portfolio = portfolioRepository.findByNomeUtente(request.getNomeUtente())
-                .orElseThrow(() -> new RuntimeException("Portfolio non trovato"));
+                .orElseThrow(() -> new EntityNotFoundException("Portfolio non trovato"));
 
         if (portfolio.getAzioni() == null) {
             portfolio.setAzioni(new ArrayList<>());
         }
 
-        // Logica di acquisto/vendita con gestione quantità
+        //  Logica di acquisto/vendita con gestione quantità
         if ("Acquisto".equalsIgnoreCase(request.getTipoTransazione())) {
             portfolio.getAzioni().stream()
                     .filter(a -> a.getId().equals(azione.getId()))
@@ -86,13 +88,13 @@ public class TransazioneService {
                         }
                     });
         } else {
-            throw new RuntimeException("Errore: Tipo di transazione non valido!");
+            throw new ConstraintViolationException("Errore: Tipo di transazione non valido!", null);
         }
 
-        // Salvo il portfolio aggiornato
+        //  Salvo il portfolio aggiornato
         portfolioRepository.save(portfolio);
 
-        // Preparo la risposta con la quantità corretta
+        //  Preparo la risposta con la quantità corretta
         TransazioneResponse response = new TransazioneResponse();
         BeanUtils.copyProperties(salvata, response);
         response.setAzioneId(salvata.getAzione().getId());

@@ -1,5 +1,6 @@
 package it.epicode.simulatore_trading.portfolio;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +29,9 @@ public class PortfolioController {
             @RequestParam int quantita
     ) {
         if (quantita <= 0) {
-            throw new RuntimeException("Errore: La quantità deve essere maggiore di zero!");
+            throw new ConstraintViolationException("La quantità deve essere maggiore di zero!", null);
         }
 
         return portfolioService.aggiungiAzione(portfolioId, azioneId, quantita);
     }
 }
-

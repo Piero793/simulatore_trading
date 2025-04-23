@@ -1,5 +1,7 @@
 package it.epicode.simulatore_trading.previsione_prezzi;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +23,10 @@ public class PrevisionePrezzoController {
         try {
             double previsione = previsionePrezzoService.prevediPrezzoPerAzione(azioneId);
             return ResponseEntity.ok(previsione);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Nessun dato disponibile per questa azione.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Azione non trovata: " + e.getMessage());
+        } catch (ConstraintViolationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Errore di validazione: " + e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Errore nel calcolo della previsione: " + e.getMessage());
         }

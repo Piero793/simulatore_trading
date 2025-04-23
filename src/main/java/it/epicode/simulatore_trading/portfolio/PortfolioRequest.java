@@ -1,6 +1,7 @@
 package it.epicode.simulatore_trading.portfolio;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PortfolioRequest {
-    @NotBlank(message = "Il nome utente non può essere vuoto")
+    @NotNull(message = "Il nome utente non può essere vuoto")
     private String nomeUtente;
 }
