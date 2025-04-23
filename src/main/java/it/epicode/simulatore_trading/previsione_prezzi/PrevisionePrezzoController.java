@@ -31,4 +31,16 @@ public class PrevisionePrezzoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Errore nel calcolo della previsione: " + e.getMessage());
         }
     }
+
+    @GetMapping("/alert/{azioneId}")
+    public ResponseEntity<?> verificaAlert(@PathVariable Long azioneId) {
+        try {
+            String messaggioAlert = previsionePrezzoService.verificaPrevisione(azioneId);
+            return ResponseEntity.ok(messaggioAlert);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Azione non trovata: " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Errore nel controllo alert: " + e.getMessage());
+        }
+    }
 }

@@ -22,10 +22,10 @@ public class PrevisionePrezzoService {
     @Autowired
     private AzioneRepository azioneRepository;
 
-    private static final double SOGLIA_VARIAZIONE = 0.05; // Alert per variazioni superiori al 5%
+    private static final double SOGLIA_VARIAZIONE = 0.005; // Alert per variazioni superiori al 5%
 
-    // Task automatico: aggiorna il database ogni 10 minuti con nuovi dati per ogni asset
-    @Scheduled(cron = "0 */10 * * * ?")
+    //  Task automatico: aggiorna il database ogni 10 minuti con nuovi dati
+    @Scheduled(cron = "0 */2 * * * ?")
     public void aggiornaDatiStorici() {
         List<Azione> azioni = azioneRepository.findAll();
         Random random = new Random();
@@ -37,8 +37,8 @@ public class PrevisionePrezzoService {
 
             System.out.println("✅ Nuovo prezzo registrato per " + azione.getNome() + ": " + nuovoPrezzo);
 
-            // Controllo se serve un alert
-            verificaPrevisione(azione.getId(), nuovoPrezzo);
+            //  Controllo se serve un alert
+            verificaPrevisione(azione.getId());
         }
     }
 
@@ -46,7 +46,7 @@ public class PrevisionePrezzoService {
         return previsionePrezzoRepository.findByAzione(azione).size();
     }
 
-    // Metodo per prevedere il prezzo di un asset specifico
+    //  Metodo per prevedere il prezzo di un asset specifico
     public double prevediPrezzoPerAzione(Long azioneId) {
         Azione azione = azioneRepository.findById(azioneId)
                 .orElseThrow(() -> new EntityNotFoundException("Errore: Azione non trovata!"));
@@ -75,21 +75,24 @@ public class PrevisionePrezzoService {
         return Double.isNaN(previsioneRegressione) ? mediaMobile : (previsioneRegressione + mediaMobile) / 2;
     }
 
-    // Controllo le variazioni per attivare un alert
-    public void verificaPrevisione(Long azioneId, double nuovaPrevisione) {
+    //  Controllo le variazioni per attivare un alert
+    public String verificaPrevisione(Long azioneId) {
         Azione azione = azioneRepository.findById(azioneId)
                 .orElseThrow(() -> new EntityNotFoundException("Errore: Azione non trovata!"));
 
         List<PrevisionePrezzo> datiStorici = previsionePrezzoRepository.findByAzione(azione);
 
-        if (datiStorici.size() < 2) return; // Se ci sono pochi dati, non attiviamo un alert
+        if (datiStorici.size() < 2) return "❌ Nessun dato sufficiente per verificare la variazione!";
 
         double ultimaPrevisione = datiStorici.get(datiStorici.size() - 2).getPrezzoPrevisto();
+        double nuovaPrevisione = datiStorici.getLast().getPrezzoPrevisto();
         double variazione = Math.abs((nuovaPrevisione - ultimaPrevisione) / ultimaPrevisione);
 
         if (variazione > SOGLIA_VARIAZIONE) {
-            System.out.println("🚨 ALERT: La previsione di " + azione.getNome() + " è cambiata significativamente! Nuovo prezzo previsto: "
-                    + String.format("%.2f", nuovaPrevisione) + "€ (variazione del " + String.format("%.2f", variazione * 100) + "%)");
+            return "🚨 ALERT: La previsione di " + azione.getNome() + " è cambiata significativamente! Nuovo prezzo previsto: "
+                    + String.format("%.2f", nuovaPrevisione) + "€ (variazione del " + String.format("%.2f", variazione * 100) + "%)";
         }
+
+        return "✅ Nessuna variazione significativa per l'azione " + azione.getNome() + ".";
     }
 }
