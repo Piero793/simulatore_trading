@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PortfolioRequest {
-    @NotBlank
+    @NotBlank(message = "Il nome utente non può essere vuoto")
     private String nomeUtente;
 }

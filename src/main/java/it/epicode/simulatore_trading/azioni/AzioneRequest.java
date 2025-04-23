@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AzioneRequest {
-    @NotBlank
+    @NotBlank(message = "Il nome non può essere vuoto")
     private String nome;
-    @Positive
+    @Positive (message = "Il valore attuale deve essere positivo")
     private double valoreAttuale;
     private double variazione;
-    @NotNull
+    @NotNull(message = "La quantità non può essere vuota")
     private int quantita;
 }
