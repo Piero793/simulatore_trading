@@ -42,6 +42,10 @@ public class PortfolioService {
     }
 
     public PortfolioResponse creaPortfolio(PortfolioRequest request) {
+        if (request.getNomeUtente() == null || request.getNomeUtente().isEmpty()) {
+            throw new ConstraintViolationException("Il nome utente non può essere vuoto!", null);
+        }
+
         if (portfolioRepository.findByNomeUtente(request.getNomeUtente()).isPresent()) {
             throw new ConstraintViolationException("Esiste già un portfolio per questo utente!", null);
         }
