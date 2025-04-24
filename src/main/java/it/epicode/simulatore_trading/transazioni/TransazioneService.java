@@ -27,10 +27,14 @@ public class TransazioneService {
     private PortfolioRepository portfolioRepository;
 
     public List<TransazioneResponse> getTransazioni() {
-        if (transazioneRepository.findAll().isEmpty()) {
-            throw new EntityNotFoundException("Nessuna transazione trovata");
+        List<Transazione> transazioni = transazioneRepository.findAll();
+
+        //  Se il database è vuoto, restituiamo un array vuoto
+        if (transazioni.isEmpty()) {
+            return new ArrayList<>();
         }
-        return transazioneRepository.findAll().stream().map(transazione -> {
+
+        return transazioni.stream().map(transazione -> {
             TransazioneResponse response = new TransazioneResponse();
             BeanUtils.copyProperties(transazione, response);
             response.setAzioneId(transazione.getAzione().getId());
