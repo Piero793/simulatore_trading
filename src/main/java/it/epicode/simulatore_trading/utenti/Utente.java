@@ -4,13 +4,11 @@ import it.epicode.simulatore_trading.portfolio.Portfolio;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 
 @Data
 @Entity
 @AllArgsConstructor
-@NoArgsConstructor
 @Table(name = "utenti")
 public class Utente {
     @Id
@@ -34,12 +32,18 @@ public class Utente {
     @OneToOne
     private Portfolio portfolio;
 
+    private Double saldo;
 
-    public Utente(Long id, String nome, String cognome, String email, String password) {
+    public Utente() {
+        this.saldo = 10000.0; // Imposta il saldo predefinito
+    }
+
+    public Utente(Long id, String nome, String cognome, String email, String password, Double saldo) {
         this.id = id;
         this.nome = nome;
         this.cognome = cognome;
         this.email = email;
         this.password = password;
+        this.saldo = saldo;
     }
 }

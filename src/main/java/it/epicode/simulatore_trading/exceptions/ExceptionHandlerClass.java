@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -47,6 +48,31 @@ public class ExceptionHandlerClass extends ResponseEntityExceptionHandler {
             errors.put(error.getField(), "Errore controller: " + error.getDefaultMessage());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    // Eccezioni personalizzate per la logica di trading (definite all'interno di questo file)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public static class InsufficientBalanceException extends RuntimeException {
+        public InsufficientBalanceException(String message) {
+            super(message);
+        }
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public static class InsufficientQuantityException extends RuntimeException {
+        public InsufficientQuantityException(String message) {
+            super(message);
+        }
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<String> insufficientBalance(InsufficientBalanceException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InsufficientQuantityException.class)
+    public ResponseEntity<String> insufficientQuantity(InsufficientQuantityException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     // Eccezione per indicare che un'email è già registrata

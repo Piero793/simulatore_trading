@@ -52,9 +52,11 @@ public class UtenteService {
         logger.info("Portfolio creato con ID: {} per l'utente: {}", portfolioCreato.getId(), utenteSalvato.getNome());
 
         // 5. Assegna il portfolio all'utente salvato
-        utenteSalvato.setPortfolio(new Portfolio(portfolioCreato.getId(), utenteSalvato.getNome(), new ArrayList<>(), 0)); // Crea un riferimento al portfolio
+        Portfolio portfolioRiferimento = new Portfolio();
+        portfolioRiferimento.setId(portfolioCreato.getId());
+        utenteSalvato.setPortfolio(portfolioRiferimento);
         utenteRepository.save(utenteSalvato);
-        logger.info("Portfolio con ID: {} assegnato all'utente con ID: {}", portfolioCreato.getId(), utenteSalvato.getId());
+        logger.info("Portfolio con ID: {} assegnato all'utente con ID: {}", portfolioCreato.getId(), utenteSalvato.getId());        utenteRepository.save(utenteSalvato);
 
         // 6. Crea e restituisci la UtenteResponse
         UtenteResponse response = new UtenteResponse();

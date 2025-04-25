@@ -1,14 +1,21 @@
 package it.epicode.simulatore_trading.transazioni;
 
+
+
 import it.epicode.simulatore_trading.azioni.Azione;
 import it.epicode.simulatore_trading.azioni.AzioneRepository;
+import it.epicode.simulatore_trading.exceptions.ExceptionHandlerClass;
 import it.epicode.simulatore_trading.portfolio.Portfolio;
+import it.epicode.simulatore_trading.portfolio.PortfolioAzioneRepository;
 import it.epicode.simulatore_trading.portfolio.PortfolioRepository;
+import it.epicode.simulatore_trading.utenti.Utente;
+import it.epicode.simulatore_trading.utenti.UtenteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +33,15 @@ public class TransazioneService {
     @Autowired
     private PortfolioRepository portfolioRepository;
 
+    @Autowired
+    private UtenteRepository utenteRepository;
+
+    @Autowired
+    private PortfolioAzioneRepository portfolioAzioneRepository;
+
     public List<TransazioneResponse> getTransazioni() {
         List<Transazione> transazioni = transazioneRepository.findAll();
 
-        //  Se il database è vuoto, restituiamo un array vuoto
         if (transazioni.isEmpty()) {
             return new ArrayList<>();
         }
@@ -43,65 +55,66 @@ public class TransazioneService {
         }).collect(Collectors.toList());
     }
 
+    @Transactional
     public TransazioneResponse salvaTransazione(TransazioneRequest request) {
-        //  Validazione del nome utente
+        // Validazione del nome utente
         if (request.getNomeUtente() == null || request.getNomeUtente().isEmpty()) {
             throw new ConstraintViolationException("Il nome utente è obbligatorio!", null);
         }
 
-        //  Recupero l'azione dal database
+        // Recupero l'utente
+        Utente utente = utenteRepository.findByNome(request.getNomeUtente())
+                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato"));
+
+        // Recupero l'azione dal database
         Azione azione = azioneRepository.findById(request.getAzioneId())
                 .orElseThrow(() -> new EntityNotFoundException("Azione non trovata"));
 
-        //  Creo la transazione e salvo la quantità correttamente
-        Transazione nuovaTransazione = new Transazione();
-        BeanUtils.copyProperties(request, nuovaTransazione);
-        nuovaTransazione.setAzione(azione);
-        nuovaTransazione.setQuantita(request.getQuantita());
-
-        //  Salvo la transazione nel database
-        Transazione salvata = transazioneRepository.save(nuovaTransazione);
-
-        //  Recupero il portfolio dell'utente
+        // Recupero il portfolio dell'utente
         Portfolio portfolio = portfolioRepository.findByNomeUtente(request.getNomeUtente())
                 .orElseThrow(() -> new EntityNotFoundException("Portfolio non trovato"));
 
-        if (portfolio.getAzioni() == null) {
-            portfolio.setAzioni(new ArrayList<>());
-        }
+        double valoreTotale = request.getQuantita() * azione.getValoreAttuale();
 
-        //  Logica di acquisto/vendita con gestione quantità
+        // Logica di acquisto
         if ("Acquisto".equalsIgnoreCase(request.getTipoTransazione())) {
-            portfolio.getAzioni().stream()
-                    .filter(a -> a.getId().equals(azione.getId()))
-                    .findFirst()
-                    .ifPresentOrElse(
-                            a -> a.setQuantita(a.getQuantita() + request.getQuantita()), // Se esiste, aggiorna la quantità
-                            () -> {
-                                azione.setQuantita(request.getQuantita()); // Se non esiste, aggiungiamo con la quantità giusta
-                                portfolio.getAzioni().add(azione);
-                            }
-                    );
-        } else if ("Vendita".equalsIgnoreCase(request.getTipoTransazione())) {
-            portfolio.getAzioni().stream()
-                    .filter(a -> a.getId().equals(azione.getId()))
-                    .findFirst()
-                    .ifPresent(a -> {
-                        int nuovaQuantita = a.getQuantita() - request.getQuantita();
-                        if (nuovaQuantita > 0) {
-                            a.setQuantita(nuovaQuantita); // Se rimangono azioni, aggiorna la quantità
-                        } else {
-                            portfolio.getAzioni().removeIf(az -> az.getId().equals(azione.getId())); // Se la quantità è 0, rimuoviamo l'azione
-                        }
-                    });
+            if (utente.getSaldo() < valoreTotale) {
+                throw new ExceptionHandlerClass.InsufficientBalanceException("Saldo insufficiente per l'acquisto!");
+            }
+            utente.setSaldo(utente.getSaldo() - valoreTotale);
+            utenteRepository.save(utente);
+
+            portfolio.aggiungiAzione(azione, request.getQuantita());
+            portfolioRepository.save(portfolio);
+        }
+        // Logica di vendita
+        else if ("Vendita".equalsIgnoreCase(request.getTipoTransazione())) {
+            int quantitaPosseduta = portfolio.getQuantitaAzione(azione);
+            if (request.getQuantita() > quantitaPosseduta) {
+                throw new ExceptionHandlerClass.InsufficientQuantityException("Quantità insufficiente di azioni per la vendita!");
+            }
+            utente.setSaldo(utente.getSaldo() + valoreTotale);
+            utenteRepository.save(utente);
+
+            // Rimuovi o aggiorna la quantità di azioni nel portfolio
+            int nuovaQuantita = quantitaPosseduta - request.getQuantita();
+            if (nuovaQuantita > 0) {
+                portfolio.aggiungiAzione(azione, nuovaQuantita - quantitaPosseduta); // Aggiorna la quantità
+            } else {
+                portfolio.rimuoviAzione(azione);
+            }
+            portfolioRepository.save(portfolio);
         } else {
             throw new ConstraintViolationException("Errore: Tipo di transazione non valido!", null);
         }
 
-        //  Salvo il portfolio aggiornato
-        portfolioRepository.save(portfolio);
+        // Creo la transazione e la salvo
+        Transazione nuovaTransazione = new Transazione();
+        BeanUtils.copyProperties(request, nuovaTransazione);
+        nuovaTransazione.setAzione(azione);
+        nuovaTransazione.setQuantita(request.getQuantita());
+        Transazione salvata = transazioneRepository.save(nuovaTransazione);
 
-        //  Preparo la risposta con la quantità corretta
         TransazioneResponse response = new TransazioneResponse();
         BeanUtils.copyProperties(salvata, response);
         response.setAzioneId(salvata.getAzione().getId());
