@@ -48,4 +48,25 @@ public class ExceptionHandlerClass extends ResponseEntityExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
+
+    // Eccezione per indicare che un'email è già registrata
+    public static class EmailAlreadyExistsException extends RuntimeException {
+        public EmailAlreadyExistsException(String message) {
+            super(message);
+        }
+    }
+
+    // Eccezione per indicare che non è stato trovato un portfolio per un utente
+    public class PortfolioNotFoundException extends EntityNotFoundException {
+        public PortfolioNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    // Eccezione per indicare che un utente non è stato trovato (per il login, ad esempio)
+    public static class UserNotFoundException extends EntityNotFoundException {
+        public UserNotFoundException(String message) {
+            super(message);
+        }
+    }
 }
