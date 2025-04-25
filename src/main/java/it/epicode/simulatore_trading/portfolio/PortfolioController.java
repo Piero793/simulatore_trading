@@ -13,9 +13,13 @@ public class PortfolioController {
     @Autowired
     private PortfolioService portfolioService;
 
-    @GetMapping("/{nomeUtente}")
+    // Modifica: Ottieni il portfolio dell'utente autenticato
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public PortfolioResponse getPortfolio(@PathVariable String nomeUtente) {
+    public PortfolioResponse getPortfolio() {
+        // TODO: Recuperare l'utente autenticato dalla sessione o dal contesto di sicurezza.
+        // Per ora, simuleremo il recupero del portfolio di un utente specifico (es. "admin").
+        String nomeUtente = "admin"; //  Simulazione:  Recupera l'utente dalla sessione.
         return portfolioService.getPortfolio(nomeUtente);
     }
 
