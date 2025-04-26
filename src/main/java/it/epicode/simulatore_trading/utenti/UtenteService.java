@@ -47,7 +47,7 @@ public class UtenteService {
         // 4. Crea un nuovo Portfolio per l'utente
         logger.info("Inizio creazione portfolio per l'utente: {}", utenteSalvato.getNome());
         PortfolioRequest portfolioRequest = new PortfolioRequest();
-        portfolioRequest.setNomeUtente(utenteSalvato.getNome()); // Potresti usare un altro identificativo
+        portfolioRequest.setNomeUtente(utenteSalvato.getNome()); // Potrei usare un altro identificativo
         PortfolioResponse portfolioCreato = portfolioService.creaPortfolio(portfolioRequest);
         logger.info("Portfolio creato con ID: {} per l'utente: {}", portfolioCreato.getId(), utenteSalvato.getNome());
 
@@ -56,7 +56,8 @@ public class UtenteService {
         portfolioRiferimento.setId(portfolioCreato.getId());
         utenteSalvato.setPortfolio(portfolioRiferimento);
         utenteRepository.save(utenteSalvato);
-        logger.info("Portfolio con ID: {} assegnato all'utente con ID: {}", portfolioCreato.getId(), utenteSalvato.getId());        utenteRepository.save(utenteSalvato);
+        logger.info("Portfolio con ID: {} assegnato all'utente con ID: {}", portfolioCreato.getId(), utenteSalvato.getId());
+        utenteRepository.save(utenteSalvato);
 
         // 6. Crea e restituisci la UtenteResponse
         UtenteResponse response = new UtenteResponse();
@@ -79,5 +80,17 @@ public class UtenteService {
                     logger.warn("Tentativo di login fallito per l'utente con email: {}", email);
                     return new ExceptionHandlerClass.UserNotFoundException("Credenziali di accesso non valide.");
                 });
+    }
+
+    /**
+     * Recupera il saldo di un utente dato il suo nome.
+     * @param nomeUtente Il nome dell'utente.
+     * @return Il saldo dell'utente o null se l'utente non viene trovato.
+     */
+    public Double getSaldoByNome(String nomeUtente) {
+        logger.info("Recupero saldo per l'utente con nome: {}", nomeUtente);
+        return utenteRepository.findByNome(nomeUtente)
+                .map(Utente::getSaldo)
+                .orElse(null);
     }
 }
