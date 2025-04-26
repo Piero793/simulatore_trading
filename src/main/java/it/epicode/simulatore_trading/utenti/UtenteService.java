@@ -65,7 +65,7 @@ public class UtenteService {
         return response;
     }
 
-    // Metodo per la gestione del login (semplificato per il progetto scolastico)
+    // Metodo per la gestione del login
     public UtenteResponse loginUtente(String email, String password) {
         logger.info("Tentativo di login per l'utente con email: {}", email);
         return utenteRepository.findByEmailAndPassword(email, password)

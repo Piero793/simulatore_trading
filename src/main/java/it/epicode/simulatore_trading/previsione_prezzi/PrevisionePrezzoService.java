@@ -22,7 +22,7 @@ public class PrevisionePrezzoService {
     @Autowired
     private AzioneRepository azioneRepository;
 
-    private static final double SOGLIA_VARIAZIONE = 0.005; // Alert per variazioni superiori al 5%
+    private static final double SOGLIA_VARIAZIONE = 0.003; // Alert per variazioni superiori al 3%
 
     //  Task automatico: aggiorna il database ogni 10 minuti con nuovi dati
     @Scheduled(cron = "0 */2 * * * ?")

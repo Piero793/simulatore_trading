@@ -50,7 +50,7 @@ public class ExceptionHandlerClass extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
-    // Eccezioni personalizzate per la logica di trading (definite all'interno di questo file)
+    // Eccezioni personalizzate per la logica di trading
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public static class InsufficientBalanceException extends RuntimeException {
         public InsufficientBalanceException(String message) {

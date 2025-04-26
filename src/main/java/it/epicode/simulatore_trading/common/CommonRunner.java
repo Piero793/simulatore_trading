@@ -35,7 +35,7 @@ public class CommonRunner implements CommandLineRunner {
             Azione azione = new Azione();
             azione.setNome(faker.company().name());
             azione.setValoreAttuale(50 + (random.nextDouble() * 450)); // Prezzo casuale tra 50 e 500
-            azione.setVariazione((random.nextDouble() * 10) - 5); // Variazione tra -5% e +5%
+            azione.setVariazione((random.nextDouble() * 6) - 3); // Variazione tra -3% e +3%
             azioneRepository.save(azione);
         }
         System.out.println("✅ Azioni casuali generate!");
