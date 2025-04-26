@@ -1,6 +1,7 @@
 package it.epicode.simulatore_trading.transazioni;
 
 import it.epicode.simulatore_trading.azioni.Azione;
+import it.epicode.simulatore_trading.utenti.Utente;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,10 @@ public class Transazione {
     private String tipoTransazione;
     private int quantita;
     private double prezzoUnitario;
+
     @ManyToOne
     private Azione azione;
+
+    @ManyToOne
+    private Utente utente;
 }

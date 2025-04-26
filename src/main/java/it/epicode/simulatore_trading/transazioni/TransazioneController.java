@@ -17,12 +17,12 @@ public class TransazioneController {
     private TransazioneService transazioneService;
 
     /**
-     * Recupera tutte le transazioni registrate.
+     * Recupera tutte le transazioni per l'utente specificato.
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<TransazioneResponse> getTransazioni() {
-        return transazioneService.getTransazioni();
+    public List<TransazioneResponse> getTransazioniPerUtente(@RequestParam String nomeUtente) {
+        return transazioneService.getTransazioniPerUtente(nomeUtente);
     }
 
     /**
@@ -31,6 +31,9 @@ public class TransazioneController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<TransazioneResponse> salvaTransazione(@Valid @RequestBody TransazioneRequest request) {
+        // Qui, quando salvi una transazione, dovrai assicurarti di associarla all'utente loggato.
+        // Se non stai ancora usando Spring Security, potresti dover ricevere l'ID o il nome utente
+        // nella TransazioneRequest o dedurlo da qualche altro contesto.
         return ResponseEntity.ok(transazioneService.salvaTransazione(request));
     }
 }

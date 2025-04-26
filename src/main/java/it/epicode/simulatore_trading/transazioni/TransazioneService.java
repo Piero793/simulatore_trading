@@ -55,6 +55,25 @@ public class TransazioneService {
         }).collect(Collectors.toList());
     }
 
+    public List<TransazioneResponse> getTransazioniPerUtente(String nomeUtente) {
+        Utente utente = utenteRepository.findByNome(nomeUtente)
+                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato con nome: " + nomeUtente));
+
+        List<Transazione> transazioni = transazioneRepository.findByUtente(utente);
+
+        if (transazioni.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return transazioni.stream().map(transazione -> {
+            TransazioneResponse response = new TransazioneResponse();
+            BeanUtils.copyProperties(transazione, response);
+            response.setAzioneId(transazione.getAzione().getId());
+            response.setNomeAzione(transazione.getAzione().getNome());
+            return response;
+        }).collect(Collectors.toList());
+    }
+
     @Transactional
     public TransazioneResponse salvaTransazione(TransazioneRequest request) {
         // Validazione del nome utente
@@ -113,6 +132,7 @@ public class TransazioneService {
         BeanUtils.copyProperties(request, nuovaTransazione);
         nuovaTransazione.setAzione(azione);
         nuovaTransazione.setQuantita(request.getQuantita());
+        nuovaTransazione.setUtente(utente); // Associa la transazione all'utente
         Transazione salvata = transazioneRepository.save(nuovaTransazione);
 
         TransazioneResponse response = new TransazioneResponse();
