@@ -13,19 +13,18 @@ public class PortfolioController {
     @Autowired
     private PortfolioService portfolioService;
 
-    // Modifica: Ottieni il portfolio dell'utente autenticato
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public PortfolioResponse getPortfolio() {
-        // TODO: Recuperare l'utente autenticato dalla sessione o dal contesto di sicurezza.
-        // Per ora, simuleremo il recupero del portfolio di un utente specifico (es. "admin").
-        String nomeUtente = "admin"; //  Simulazione:  Recupera l'utente dalla sessione.
+    public PortfolioResponse getPortfolio(@RequestParam String nomeUtente) {
         return portfolioService.getPortfolio(nomeUtente);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PortfolioResponse creaPortfolio(@RequestBody PortfolioRequest request) {
+        // Quando implementerai Spring Security, dovrai recuperare l'utente autenticato
+        // e associare il nuovo portfolio a quell'utente invece di fare affidamento
+        // sul nome utente fornito nella request (se presente).
         return portfolioService.creaPortfolio(request);
     }
 
@@ -39,7 +38,9 @@ public class PortfolioController {
         if (quantita <= 0) {
             throw new ConstraintViolationException("La quantità deve essere maggiore di zero!", null);
         }
-
+        // Quando implementerai Spring Security, potresti voler verificare che l'utente
+        // autenticato sia il proprietario del portfolio prima di permettere
+        // l'aggiunta di azioni.
         return portfolioService.aggiungiAzione(portfolioId, azioneId, quantita);
     }
 }
