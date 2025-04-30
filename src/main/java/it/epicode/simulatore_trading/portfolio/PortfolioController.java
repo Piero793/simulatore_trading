@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/portfolio")
-@CrossOrigin(origins = "*")
 public class PortfolioController {
 
     @Autowired
@@ -16,15 +15,13 @@ public class PortfolioController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public PortfolioResponse getPortfolio(@RequestParam String nomeUtente) {
+        System.out.println("DEBUG: Richiesta GET /api/portfolio ricevuta per utente: " + nomeUtente);
         return portfolioService.getPortfolio(nomeUtente);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PortfolioResponse creaPortfolio(@RequestBody PortfolioRequest request) {
-        // Quando implementerai Spring Security, dovrai recuperare l'utente autenticato
-        // e associare il nuovo portfolio a quell'utente invece di fare affidamento
-        // sul nome utente fornito nella request (se presente).
         return portfolioService.creaPortfolio(request);
     }
 
@@ -38,9 +35,6 @@ public class PortfolioController {
         if (quantita <= 0) {
             throw new ConstraintViolationException("La quantità deve essere maggiore di zero!", null);
         }
-        // Quando implementerai Spring Security, potresti voler verificare che l'utente
-        // autenticato sia il proprietario del portfolio prima di permettere
-        // l'aggiunta di azioni.
         return portfolioService.aggiungiAzione(portfolioId, azioneId, quantita);
     }
 }

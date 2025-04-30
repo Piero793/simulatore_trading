@@ -1,7 +1,9 @@
 package it.epicode.simulatore_trading.transazioni;
 
+
 import it.epicode.simulatore_trading.azioni.Azione;
 import it.epicode.simulatore_trading.utenti.Utente;
+import it.epicode.simulatore_trading.portfolio.Portfolio;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,4 +27,7 @@ public class Transazione {
 
     @ManyToOne
     private Utente utente;
+
+    @ManyToOne
+    private Portfolio portfolio; // Una transazione appartiene a un portfolio
 }

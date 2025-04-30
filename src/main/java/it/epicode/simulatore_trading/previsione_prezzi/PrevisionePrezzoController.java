@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/previsione")
-@CrossOrigin(origins = "*")
 public class PrevisionePrezzoController {
 
     private final PrevisionePrezzoService previsionePrezzoService;
@@ -24,11 +23,11 @@ public class PrevisionePrezzoController {
             double previsione = previsionePrezzoService.prevediPrezzoPerAzione(azioneId);
             return ResponseEntity.ok(previsione);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Azione non trovata: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(" Azione non trovata: " + e.getMessage());
         } catch (ConstraintViolationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Errore di validazione: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(" Errore di validazione: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Errore nel calcolo della previsione: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(" Errore nel calcolo della previsione: " + e.getMessage());
         }
     }
 
@@ -38,9 +37,9 @@ public class PrevisionePrezzoController {
             String messaggioAlert = previsionePrezzoService.verificaPrevisione(azioneId);
             return ResponseEntity.ok(messaggioAlert);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Azione non trovata: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(" Azione non trovata: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Errore nel controllo alert: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(" Errore nel controllo alert: " + e.getMessage());
         }
     }
 }

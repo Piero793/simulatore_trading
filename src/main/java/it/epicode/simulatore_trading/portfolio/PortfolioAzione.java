@@ -15,12 +15,10 @@ import jakarta.persistence.*;
 public class PortfolioAzione {
     @Id
     @ManyToOne
-    @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "azione_id")
     private Azione azione;
 
     @Column(nullable = false)

@@ -5,14 +5,16 @@ import it.epicode.simulatore_trading.portfolio.Portfolio;
 import it.epicode.simulatore_trading.portfolio.PortfolioRequest;
 import it.epicode.simulatore_trading.portfolio.PortfolioResponse;
 import it.epicode.simulatore_trading.portfolio.PortfolioService;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Optional;
+
 
 @Service
 public class UtenteService {
@@ -24,6 +26,9 @@ public class UtenteService {
 
     @Autowired
     private PortfolioService portfolioService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // PasswordEncoder (BCrypt)
 
     @Transactional
     public UtenteResponse registraUtente(UtenteRequest request) {
@@ -38,6 +43,16 @@ public class UtenteService {
         // 2. Crea una nuova entity Utente
         Utente nuovoUtente = new Utente();
         BeanUtils.copyProperties(request, nuovoUtente);
+
+        // crea la password cifrata prima di salvarla
+        String passwordCifrata = passwordEncoder.encode(request.getPassword());
+        nuovoUtente.setPassword(passwordCifrata);
+
+        // inizializza il saldo del nuovo utente
+        nuovoUtente.setSaldo(10000.0); // Saldo virtuale iniziale
+        logger.info("Saldo iniziale impostato per il nuovo utente: {}", nuovoUtente.getSaldo());
+        // -----------------------------------------------------------
+
         logger.info("Utente creato (prima del salvataggio): {}", nuovoUtente);
 
         // 3. Salva l'utente nel database
@@ -47,26 +62,26 @@ public class UtenteService {
         // 4. Crea un nuovo Portfolio per l'utente
         logger.info("Inizio creazione portfolio per l'utente: {}", utenteSalvato.getNome());
         PortfolioRequest portfolioRequest = new PortfolioRequest();
-        portfolioRequest.setNomeUtente(utenteSalvato.getNome()); // Potrei usare un altro identificativo
+        portfolioRequest.setNomeUtente(utenteSalvato.getNome());
         PortfolioResponse portfolioCreato = portfolioService.creaPortfolio(portfolioRequest);
         logger.info("Portfolio creato con ID: {} per l'utente: {}", portfolioCreato.getId(), utenteSalvato.getNome());
 
         // 5. Assegna il portfolio all'utente salvato
-        Portfolio portfolioRiferimento = new Portfolio();
-        portfolioRiferimento.setId(portfolioCreato.getId());
-        utenteSalvato.setPortfolio(portfolioRiferimento);
-        utenteRepository.save(utenteSalvato);
-        logger.info("Portfolio con ID: {} assegnato all'utente con ID: {}", portfolioCreato.getId(), utenteSalvato.getId());
-        utenteRepository.save(utenteSalvato);
+        Portfolio portfolioEntity = portfolioService.findById(portfolioCreato.getId())
+                .orElseThrow(() -> new RuntimeException("Errore nel recupero dell'entità Portfolio dopo la creazione"));
+
+        utenteSalvato.setPortfolio(portfolioEntity); // Associa l'entità portfolio completa all'utente
+        utenteRepository.save(utenteSalvato); // Salva di nuovo l'utente con il riferimento al portfolio
+        logger.info("Entità Portfolio con ID: {} assegnata all'utente con ID: {}", portfolioEntity.getId(), utenteSalvato.getId());
+
 
         // 6. Crea e restituisci la UtenteResponse
-        UtenteResponse response = new UtenteResponse();
-        BeanUtils.copyProperties(utenteSalvato, response);
-        logger.info("Registrazione utente completata con successo per email: {}", response.getEmail());
-        return response;
+        return mapUtenteToUtenteResponse(utenteSalvato);
     }
 
-    // Metodo per la gestione del login
+
+    // --- METODO loginUtente NON PIÙ USATO PER L'AUTENTICAZIONE CON SPRING SECURITY ---
+    /*
     public UtenteResponse loginUtente(String email, String password) {
         logger.info("Tentativo di login per l'utente con email: {}", email);
         return utenteRepository.findByEmailAndPassword(email, password)
@@ -81,16 +96,45 @@ public class UtenteService {
                     return new ExceptionHandlerClass.UserNotFoundException("Credenziali di accesso non valide.");
                 });
     }
+    */
 
-    /**
-     * Recupera il saldo di un utente dato il suo nome.
-     * @param nomeUtente Il nome dell'utente.
-     * @return Il saldo dell'utente o null se l'utente non viene trovato.
-     */
+    // Metodo per mappare l'entità Utente a UtenteResponse
+    public UtenteResponse mapUtenteToUtenteResponse(Utente utente) {
+        UtenteResponse response = new UtenteResponse();
+        BeanUtils.copyProperties(utente, response);
+
+        if (utente.getPortfolio() != null) {
+            response.setPortfolioId(utente.getPortfolio().getId());
+            logger.info("Portfolio ID {} aggiunto alla UtenteResponse (mapping) per utente ID {}", utente.getPortfolio().getId(), utente.getId());
+        } else {
+            logger.warn("Portfolio non associato all'utente ID {} (mapping). Portfolio ID non sarà incluso nella UtenteResponse.", utente.getId());
+        }
+
+        response.setSaldo(utente.getSaldo());
+
+        return response;
+    }
+
+    // Recupera il saldo di un utente dato il suo nome.
     public Double getSaldoByNome(String nomeUtente) {
         logger.info("Recupero saldo per l'utente con nome: {}", nomeUtente);
         return utenteRepository.findByNome(nomeUtente)
                 .map(Utente::getSaldo)
                 .orElse(null);
+    }
+
+    // Metodo per trovare un utente per email
+    public Optional<Utente> findByEmail(String email) {
+        return utenteRepository.findByEmail(email);
+    }
+
+    // Metodo per trovare un utente per nome
+    public Optional<Utente> findByNome(String nome) {
+        return utenteRepository.findByNome(nome);
+    }
+
+    // Metodo per trovare un utente per ID
+    public Optional<Utente> findById(Long id) {
+        return utenteRepository.findById(id);
     }
 }

@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/azioni")
-@CrossOrigin(origins = "*")
 public class AzioneController {
     @Autowired
     private AzioneService azioneService;

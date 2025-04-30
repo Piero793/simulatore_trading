@@ -10,30 +10,22 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/transazioni")
-@CrossOrigin(origins = "*")
 public class TransazioneController {
 
     @Autowired
     private TransazioneService transazioneService;
 
-    /**
-     * Recupera tutte le transazioni per l'utente specificato.
-     */
+    // Recupera tutte le transazioni per l'utente specificato
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<TransazioneResponse> getTransazioniPerUtente(@RequestParam String nomeUtente) {
         return transazioneService.getTransazioniPerUtente(nomeUtente);
     }
 
-    /**
-     * Registra una nuova transazione di acquisto o vendita.
-     */
+    // Registra una nuova transazione di acquisto o vendita
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<TransazioneResponse> salvaTransazione(@Valid @RequestBody TransazioneRequest request) {
-        // Qui, quando salvi una transazione, dovrai assicurarti di associarla all'utente loggato.
-        // Se non stai ancora usando Spring Security, potresti dover ricevere l'ID o il nome utente
-        // nella TransazioneRequest o dedurlo da qualche altro contesto.
         return ResponseEntity.ok(transazioneService.salvaTransazione(request));
     }
 }

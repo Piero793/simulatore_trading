@@ -25,9 +25,6 @@ public class CommonRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         generaAzioniCasuali();
-/*
-        generaTransazioniCasuali();
-*/
     }
 
     private void generaAzioniCasuali() {
@@ -40,20 +37,4 @@ public class CommonRunner implements CommandLineRunner {
         }
         System.out.println("✅ Azioni casuali generate!");
     }
-
-   /* private void generaTransazioniCasuali() {
-        List<Azione> azioni = azioneRepository.findAll();
-        if (azioni.isEmpty()) return;
-
-        for (int i = 0; i < 20; i++) {
-            Azione azione = azioni.get(random.nextInt(azioni.size()));
-            Transazione transazione = new Transazione();
-            transazione.setTipoTransazione(random.nextBoolean() ? "Acquisto" : "Vendita");
-            transazione.setQuantita(random.nextInt(10) + 1);
-            transazione.setPrezzoUnitario(azione.getValoreAttuale() + (random.nextDouble() * 10 - 5));
-            transazione.setAzione(azione);
-            transazioneRepository.save(transazione);
-        }
-        System.out.println("✅ Transazioni casuali generate!");
-    }*/
 }
