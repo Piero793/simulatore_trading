@@ -2,7 +2,6 @@ package it.epicode.simulatore_trading.utenti;
 
 import it.epicode.simulatore_trading.exceptions.ExceptionHandlerClass;
 import it.epicode.simulatore_trading.portfolio.Portfolio;
-import it.epicode.simulatore_trading.portfolio.PortfolioRequest;
 import it.epicode.simulatore_trading.portfolio.PortfolioResponse;
 import it.epicode.simulatore_trading.portfolio.PortfolioService;
 import org.slf4j.Logger;

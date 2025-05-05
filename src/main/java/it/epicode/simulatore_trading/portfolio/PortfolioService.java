@@ -8,7 +8,6 @@ import it.epicode.simulatore_trading.utenti.Utente;
 import it.epicode.simulatore_trading.utenti.UtenteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -63,7 +62,6 @@ public class PortfolioService {
 
         PortfolioResponse response = new PortfolioResponse();
         BeanUtils.copyProperties(portfolio, response);
-        // Mappa le PortfolioAzione in AzioneResponse includendo la quantità
         response.setAzioni(portfolio.getPortfolioAzioni().stream()
                 .map(pa -> new AzioneResponse(
                         pa.getAzione().getId(),
@@ -79,7 +77,7 @@ public class PortfolioService {
     }
 
 
-    @Transactional // Assicurati che questo metodo sia transazionale
+    @Transactional
     public PortfolioResponse creaPortfolio(Utente utente) {
         logger.info("Inizio creazione portfolio per l'utente con ID: {}", utente.getId());
 
@@ -102,7 +100,6 @@ public class PortfolioService {
 
 
         PortfolioResponse response = new PortfolioResponse();
-        // Copia le proprietà dal portfolio salvato alla response
         BeanUtils.copyProperties(salvato, response);
         response.setAzioni(new ArrayList<>());
         response.setId(salvato.getId());

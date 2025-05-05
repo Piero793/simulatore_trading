@@ -23,13 +23,11 @@ public class TransazioneController {
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
     public List<TransazioneResponse> getMyTransazioni() throws AccessDeniedException {
-        // Ottieni l'oggetto Authentication dal SecurityContext
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Utente) {
             Long userId = ((Utente) authentication.getPrincipal()).getId();
             return transazioneService.getTransazioniByUserId(userId);
         }
-        // Se l'utente non è autenticato correttamente, lancia un'eccezione
         throw new AccessDeniedException("Utente non autenticato o informazioni insufficienti.");
     }
 
@@ -37,13 +35,11 @@ public class TransazioneController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<TransazioneResponse> salvaTransazione(@Valid @RequestBody TransazioneRequest request) throws AccessDeniedException {
-        // Ottieni l'oggetto Authentication dal SecurityContext
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Utente) {
             Long userId = ((Utente) authentication.getPrincipal()).getId();
             return ResponseEntity.ok(transazioneService.salvaTransazione(request, userId));
         }
-        // Se l'utente non è autenticato correttamente, lancia un'eccezione
         throw new AccessDeniedException("Utente non autenticato o informazioni insufficienti.");
     }
 }

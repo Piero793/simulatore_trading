@@ -70,7 +70,7 @@ public class TransazioneService {
      * @param userId  ID dell'utente autenticato che sta effettuando la transazione.
      * @return Oggetto TransazioneResponse della transazione salvata.
      */
-    @Transactional // Assicura che l'operazione sia atomica
+    @Transactional
     public TransazioneResponse salvaTransazione(TransazioneRequest request, Long userId) throws AccessDeniedException {
         log.info("Salvataggio transazione per utente con ID: {}", userId);
 
