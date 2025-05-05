@@ -189,10 +189,4 @@ public class PortfolioService {
         return portfolioRepository.findById(id);
     }
 
-    // opzionale
-    public Optional<Portfolio> findByNomeUtente(String nomeUtente) {
-        logger.warn("Chiamata a findByNomeUtente su PortfolioService. Questo metodo potrebbe non funzionare più come previsto dopo le modifiche alle entità.");
-
-        return Optional.empty();
-    }
 }
