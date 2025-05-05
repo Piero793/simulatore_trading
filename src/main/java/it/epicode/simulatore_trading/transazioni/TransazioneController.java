@@ -1,11 +1,15 @@
 package it.epicode.simulatore_trading.transazioni;
 
+import it.epicode.simulatore_trading.utenti.Utente;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @RestController
@@ -15,17 +19,31 @@ public class TransazioneController {
     @Autowired
     private TransazioneService transazioneService;
 
-    // Recupera tutte le transazioni per l'utente specificato
-    @GetMapping
+    // Recupera tutte le transazioni per l'utente autenticato
+    @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public List<TransazioneResponse> getTransazioniPerUtente(@RequestParam String nomeUtente) {
-        return transazioneService.getTransazioniPerUtente(nomeUtente);
+    public List<TransazioneResponse> getMyTransazioni() throws AccessDeniedException {
+        // Ottieni l'oggetto Authentication dal SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Utente) {
+            Long userId = ((Utente) authentication.getPrincipal()).getId();
+            return transazioneService.getTransazioniByUserId(userId);
+        }
+        // Se l'utente non è autenticato correttamente, lancia un'eccezione
+        throw new AccessDeniedException("Utente non autenticato o informazioni insufficienti.");
     }
 
     // Registra una nuova transazione di acquisto o vendita
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<TransazioneResponse> salvaTransazione(@Valid @RequestBody TransazioneRequest request) {
-        return ResponseEntity.ok(transazioneService.salvaTransazione(request));
+    public ResponseEntity<TransazioneResponse> salvaTransazione(@Valid @RequestBody TransazioneRequest request) throws AccessDeniedException {
+        // Ottieni l'oggetto Authentication dal SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Utente) {
+            Long userId = ((Utente) authentication.getPrincipal()).getId();
+            return ResponseEntity.ok(transazioneService.salvaTransazione(request, userId));
+        }
+        // Se l'utente non è autenticato correttamente, lancia un'eccezione
+        throw new AccessDeniedException("Utente non autenticato o informazioni insufficienti.");
     }
 }

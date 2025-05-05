@@ -40,22 +40,17 @@ public class UtenteController {
     public ResponseEntity<LoginResponse> loginUser(@RequestBody @Valid LoginRequest loginRequest) {
         logger.info("Tentativo di login per l'utente con email: {}", loginRequest.getEmail());
 
-        // 1. Autentica l'utente usando l'AuthenticationManager di Spring Security
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
-                        loginRequest.getPassword()) // Password in chiaro
+                        loginRequest.getPassword())
         );
 
-        // 2. Imposta l'oggetto Authentication nel SecurityContextHolder
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 3. Genera il token JWT per l'utente autenticato
         String jwt = jwtTokenProvider.generateToken(authentication);
         logger.info("Token JWT generato per l'utente: {}", loginRequest.getEmail());
 
-
-        // 4. Recupera i dettagli dell'utente autenticato per la risposta
         Utente utente = utenteService.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> {
                     logger.error("Errore critico: Utente non trovato nel DB dopo autenticazione riuscita per email: {}", loginRequest.getEmail());
@@ -64,27 +59,30 @@ public class UtenteController {
 
         UtenteResponse utenteResponse = utenteService.mapUtenteToUtenteResponse(utente);
 
-        // 5. Restituisci il token JWT e i dettagli dell'utente nella risposta
         LoginResponse loginResponse = new LoginResponse(jwt, utenteResponse);
         logger.info("Login riuscito per l'utente: {}", loginRequest.getEmail());
 
         return ResponseEntity.ok(loginResponse);
     }
 
-   // Endpoint per ottenere il saldo di un utente
-    @GetMapping("/saldo/{nomeUtente}")
-    public ResponseEntity<SaldoResponse> getSaldoUtente(@PathVariable String nomeUtente) {
-        logger.info("DEBUG: Richiesta GET /api/utenti/saldo ricevuta per utente: {}", nomeUtente);
-
-        Double saldo = utenteService.getSaldoByNome(nomeUtente);
-        if (saldo != null) {
-            logger.info("Saldo trovato per l'utente {}: {}", nomeUtente, saldo);
-            return ResponseEntity.ok(new SaldoResponse(saldo));
-        } else {
-            // Restituire 404 qui è appropriato se l'utente esiste ma non ha un saldo (o non è stato inizializzato)
-            logger.warn("Saldo non trovato (null) per l'utente: {}", nomeUtente);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    // Endpoint per ottenere il saldo dell'utente autenticato
+    @GetMapping("/saldo")
+    public ResponseEntity<SaldoResponse> getMySaldo() {
+        logger.info("DEBUG: Richiesta GET /api/utenti/saldo ricevuta per l'utente autenticato.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Utente) {
+            Long userId = ((Utente) authentication.getPrincipal()).getId();
+            Double saldo = utenteService.getSaldoById(userId);
+            if (saldo != null) {
+                logger.info("Saldo trovato per l'utente ID {}: {}", userId, saldo);
+                return ResponseEntity.ok(new SaldoResponse(saldo));
+            } else {
+                logger.warn("Saldo non trovato (null) per l'utente ID: {}", userId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
         }
+        // Se l'utente non è autenticato correttamente, restituisci 401 Unauthorized
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     // Classe interna per la risposta del saldo

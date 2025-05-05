@@ -60,11 +60,9 @@ public class UtenteService {
         logger.info("Utente salvato con ID: {}", utenteSalvato.getId());
 
         // 4. Crea un nuovo Portfolio per l'utente
-        logger.info("Inizio creazione portfolio per l'utente: {}", utenteSalvato.getNome());
-        PortfolioRequest portfolioRequest = new PortfolioRequest();
-        portfolioRequest.setNomeUtente(utenteSalvato.getNome());
-        PortfolioResponse portfolioCreato = portfolioService.creaPortfolio(portfolioRequest);
-        logger.info("Portfolio creato con ID: {} per l'utente: {}", portfolioCreato.getId(), utenteSalvato.getNome());
+        logger.info("Inizio creazione portfolio per l'utente con ID: {}", utenteSalvato.getId());
+        PortfolioResponse portfolioCreato = portfolioService.creaPortfolio(utenteSalvato);
+        logger.info("Portfolio creato con ID: {} per l'utente ID: {}", portfolioCreato.getId(), utenteSalvato.getId());
 
         // 5. Assegna il portfolio all'utente salvato
         Portfolio portfolioEntity = portfolioService.findById(portfolioCreato.getId())
@@ -115,10 +113,10 @@ public class UtenteService {
         return response;
     }
 
-    // Recupera il saldo di un utente dato il suo nome.
-    public Double getSaldoByNome(String nomeUtente) {
-        logger.info("Recupero saldo per l'utente con nome: {}", nomeUtente);
-        return utenteRepository.findByNome(nomeUtente)
+    // Recupera il saldo di un utente dato il suo ID.
+    public Double getSaldoById(Long userId) {
+        logger.info("Recupero saldo per l'utente con ID: {}", userId);
+        return utenteRepository.findById(userId)
                 .map(Utente::getSaldo)
                 .orElse(null);
     }
