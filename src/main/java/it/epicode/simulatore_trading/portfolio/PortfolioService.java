@@ -27,7 +27,8 @@ public class PortfolioService {
     private final PortfolioAzioneRepository portfolioAzioneRepository;
     private final UtenteRepository utenteRepository;
 
-    public PortfolioService(PortfolioRepository portfolioRepository, AzioneRepository azioneRepository, PortfolioAzioneRepository portfolioAzioneRepository, UtenteRepository utenteRepository) {
+    public PortfolioService(PortfolioRepository portfolioRepository, AzioneRepository azioneRepository,
+                            PortfolioAzioneRepository portfolioAzioneRepository, UtenteRepository utenteRepository) {
         this.portfolioRepository = portfolioRepository;
         this.azioneRepository = azioneRepository;
         this.portfolioAzioneRepository = portfolioAzioneRepository;
@@ -47,7 +48,6 @@ public class PortfolioService {
 
         logger.info("Utente trovato con ID: {} per il recupero portfolio.", utente.getId());
 
-        // 2. Accedi al portfolio tramite la relazione OneToOne sull'entità Utente
         logger.info("Accesso al portfolio associato all'utente ID: {}", utente.getId());
         Portfolio portfolio = utente.getPortfolio();
 
@@ -107,7 +107,8 @@ public class PortfolioService {
 
     @Transactional
     public PortfolioResponse aggiungiAzione(Long portfolioId, Long azioneId, int quantita, Long userId) {
-        logger.info("Inizio aggiunta/aggiornamento azione ID {} con quantità {} al portfolio ID {} per utente ID {}", azioneId, quantita, portfolioId, userId);
+        logger.info("Inizio aggiunta/aggiornamento azione ID {} con quantità {} al portfolio ID {} per utente ID {}",
+                azioneId, quantita, portfolioId, userId);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> {
@@ -122,11 +123,13 @@ public class PortfolioService {
 
         // Se la quantità è 0, non facciamo nulla
         if (quantita == 0) {
-            logger.warn("Tentativo di aggiungere/rimuovere quantità zero di azione ID {} al portfolio ID {}", azioneId, portfolioId);
+            logger.warn("Tentativo di aggiungere/rimuovere quantità zero di azione ID {} al portfolio ID {}",
+                    azioneId, portfolioId);
             return getPortfolioByUserId(userId);
         }
 
-        Optional<PortfolioAzione> existingPortfolioAzioneOptional = portfolioAzioneRepository.findByPortfolioAndAzione(portfolio, azione);
+        Optional<PortfolioAzione> existingPortfolioAzioneOptional =
+                portfolioAzioneRepository.findByPortfolioAndAzione(portfolio, azione);
 
         if (existingPortfolioAzioneOptional.isPresent()) {
             // Se esiste, aggiorna la quantità
@@ -136,12 +139,14 @@ public class PortfolioService {
             if (nuovaQuantita > 0) {
                 existingPortfolioAzione.setQuantita(nuovaQuantita);
                 portfolioAzioneRepository.save(existingPortfolioAzione);
-                logger.info("Aggiornata quantità azione ID {} nel portfolio ID {}. Nuova quantità: {}", azioneId, portfolioId, nuovaQuantita);
+                logger.info("Aggiornata quantità azione ID {} nel portfolio ID {}. Nuova quantità: {}",
+                        azioneId, portfolioId, nuovaQuantita);
             } else {
                 // Se la nuova quantità è zero o negativa, rimuovi l'associazione
                 portfolioAzioneRepository.delete(existingPortfolioAzione);
                 portfolio.getPortfolioAzioni().remove(existingPortfolioAzione);
-                logger.info("Rimossa azione ID {} dal portfolio ID {} (quantità scesa a zero/negativa)", azioneId, portfolioId);
+                logger.info("Rimossa azione ID {} dal portfolio ID {} (quantità scesa a zero/negativa)",
+                        azioneId, portfolioId);
             }
         } else {
             // Se non esiste, crea una nuova PortfolioAzione (solo se la quantità da aggiungere è positiva)
@@ -149,7 +154,8 @@ public class PortfolioService {
                 PortfolioAzione nuovaPortfolioAzione = new PortfolioAzione(portfolio, azione, quantita);
                 portfolioAzioneRepository.save(nuovaPortfolioAzione);
                 portfolio.getPortfolioAzioni().add(nuovaPortfolioAzione);
-                logger.info("Aggiunta nuova azione ID {} con quantità {} al portfolio ID {}", azioneId, quantita, portfolioId);
+                logger.info("Aggiunta nuova azione ID {} con quantità {} al portfolio ID {}",
+                        azioneId, quantita, portfolioId);
             } else {
                 // Tentativo di vendere un'azione che l'utente non possiede
                 logger.error("Errore aggiunta azione: Tentativo di vendere azione ID {} che l'utente non possiede nel portfolio ID {}", azioneId, portfolioId);
@@ -161,7 +167,7 @@ public class PortfolioService {
         return getPortfolioByUserId(userId);
     }
 
-    // Metodo per trovare un portfolio per ID (utile se necessario)
+    // Metodo per trovare un portfolio per ID
     public Optional<Portfolio> findById(Long id) {
         return portfolioRepository.findById(id);
     }

@@ -22,7 +22,8 @@ public class TradingService {
 
 
     @Transactional
-    public void eseguiAcquisto(Utente utente, Portfolio portfolio, Azione azione, int quantita) throws ExceptionHandlerClass.InsufficientBalanceException {
+    public void eseguiAcquisto(Utente utente, Portfolio portfolio, Azione azione, int quantita)
+            throws ExceptionHandlerClass.InsufficientBalanceException {
         double valoreTotale = (double) quantita * azione.getValoreAttuale();
         if (utente.getSaldo() == null || utente.getSaldo() < valoreTotale) {
             throw new ExceptionHandlerClass.InsufficientBalanceException("Saldo insufficiente per l'acquisto! Saldo attuale: " + utente.getSaldo());
@@ -35,10 +36,12 @@ public class TradingService {
 
 
     @Transactional
-    public void eseguiVendita(Utente utente, Portfolio portfolio, Azione azione, int quantita) throws ExceptionHandlerClass.InsufficientQuantityException {
+    public void eseguiVendita(Utente utente, Portfolio portfolio, Azione azione, int quantita)
+            throws ExceptionHandlerClass.InsufficientQuantityException {
         int quantitaPosseduta = portfolio.getQuantitaAzione(azione);
         if (quantita > quantitaPosseduta) {
-            throw new ExceptionHandlerClass.InsufficientQuantityException("Quantità insufficiente di azioni per la vendita! Possedute: " + quantitaPosseduta);
+            throw new ExceptionHandlerClass.InsufficientQuantityException(
+                    "Quantità insufficiente di azioni per la vendita! Possedute: " + quantitaPosseduta);
         }
         double valoreTotale = (double) quantita * azione.getValoreAttuale();
         utente.setSaldo(utente.getSaldo() + valoreTotale);

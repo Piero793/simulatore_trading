@@ -20,7 +20,11 @@ public class PrevisionePrezzoPrincipaleService {
     private final PrevisionePrezzoService previsionePrezzoService;
     private final AlertPrevisioneService alertPrevisioneService;
 
-    public PrevisionePrezzoPrincipaleService(PrevisionePrezzoRepository previsionePrezzoRepository, AzioneRepository azioneRepository, SimulatorePrezzoService simulatorePrezzoService, PrevisionePrezzoService previsionePrezzoService, AlertPrevisioneService alertPrevisioneService) {
+    public PrevisionePrezzoPrincipaleService(PrevisionePrezzoRepository previsionePrezzoRepository,
+                                             AzioneRepository azioneRepository,
+                                             SimulatorePrezzoService simulatorePrezzoService,
+                                             PrevisionePrezzoService previsionePrezzoService,
+                                             AlertPrevisioneService alertPrevisioneService) {
         this.previsionePrezzoRepository = previsionePrezzoRepository;
         this.azioneRepository = azioneRepository;
         this.simulatorePrezzoService = simulatorePrezzoService;

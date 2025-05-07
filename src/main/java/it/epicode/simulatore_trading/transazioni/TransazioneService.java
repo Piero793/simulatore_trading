@@ -27,16 +27,16 @@ public class TransazioneService {
     private final UtenteRepository utenteRepository;
     private final TradingService tradingService;
 
-    public TransazioneService(TransazioneRepository transazioneRepository, AzioneRepository azioneRepository, UtenteRepository utenteRepository, TradingService tradingService) {
+    public TransazioneService(TransazioneRepository transazioneRepository,
+                              AzioneRepository azioneRepository, UtenteRepository utenteRepository,
+                              TradingService tradingService) {
         this.transazioneRepository = transazioneRepository;
         this.azioneRepository = azioneRepository;
         this.utenteRepository = utenteRepository;
         this.tradingService = tradingService;
     }
 
-    /**
-     * Recupera tutte le transazioni per l'utente specificato tramite ID utente.
-     */
+
     public List<TransazioneResponse> getTransazioniByUserId(Long userId) {
         log.info("Recupero transazioni per l'utente con ID: {}", userId);
         Utente utente = utenteRepository.findById(userId)
@@ -72,7 +72,8 @@ public class TransazioneService {
         }
 
         if (!portfolio.getId().equals(request.getPortfolioId())) {
-            log.warn("Tentativo di transazione sul portfolio {} da parte dell'utente {}, ma non corrispondono.", request.getPortfolioId(), userId);
+            log.warn("Tentativo di transazione sul portfolio {} da parte dell'utente {}, ma non corrispondono.",
+                    request.getPortfolioId(), userId);
             throw new AccessDeniedException("Accesso negato a questo portfolio.");
         }
 
@@ -85,7 +86,6 @@ public class TransazioneService {
         nuovaTransazione.setUtente(utente);
         nuovaTransazione.setPortfolio(portfolio);
 
-        // Delega la logica di business al TradingService
         if ("Acquisto".equalsIgnoreCase(request.getTipoTransazione())) {
             tradingService.eseguiAcquisto(utente, portfolio, azione, request.getQuantita());
         } else if ("Vendita".equalsIgnoreCase(request.getTipoTransazione())) {

@@ -47,7 +47,6 @@ public class UtenteController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
         }
-        // Se l'utente non è autenticato correttamente, restituisci 401 Unauthorized
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

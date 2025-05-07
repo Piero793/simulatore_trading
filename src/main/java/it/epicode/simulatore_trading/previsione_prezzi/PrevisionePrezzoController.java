@@ -33,7 +33,8 @@ public class PrevisionePrezzoController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Azione non trovata: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore nel recupero dei dati storici: "
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).
+                    body("Errore nel recupero dei dati storici: "
                     + e.getMessage());
         }
     }
@@ -46,7 +47,8 @@ public class PrevisionePrezzoController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Azione non trovata: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore nel controllo alert: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore nel controllo alert: "
+                    + e.getMessage());
         }
     }
 }

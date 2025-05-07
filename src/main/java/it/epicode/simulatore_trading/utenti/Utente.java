@@ -49,7 +49,8 @@ public class Utente implements UserDetails {
     private Ruolo ruolo;
 
     // Costruttore senza ruolo (imposta di default USER)
-    public Utente(Long id, String nome, String cognome, String email, String password, Double saldo, String imgUrl, Portfolio portfolio) {
+    public Utente(Long id, String nome, String cognome, String email, String password, Double saldo,
+                  String imgUrl, Portfolio portfolio) {
         this.id = id;
         this.nome = nome;
         this.cognome = cognome;
@@ -62,7 +63,8 @@ public class Utente implements UserDetails {
     }
 
     // Costruttore completo (opzionale se necessario)
-    public Utente(Long id, String nome, String cognome, String email, String password, String imgUrl, Portfolio portfolio, Double saldo, Ruolo ruolo) {
+    public Utente(Long id, String nome, String cognome, String email, String password, String imgUrl,
+                  Portfolio portfolio, Double saldo, Ruolo ruolo) {
         this.id = id;
         this.nome = nome;
         this.cognome = cognome;

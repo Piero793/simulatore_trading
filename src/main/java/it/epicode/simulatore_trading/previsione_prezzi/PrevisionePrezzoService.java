@@ -16,7 +16,8 @@ public class PrevisionePrezzoService {
     private final PrevisionePrezzoRepository previsionePrezzoRepository;
     private final AzioneRepository azioneRepository;
 
-    public PrevisionePrezzoService(PrevisionePrezzoRepository previsionePrezzoRepository, AzioneRepository azioneRepository) {
+    public PrevisionePrezzoService(PrevisionePrezzoRepository previsionePrezzoRepository,
+                                   AzioneRepository azioneRepository) {
         this.previsionePrezzoRepository = previsionePrezzoRepository;
         this.azioneRepository = azioneRepository;
     }

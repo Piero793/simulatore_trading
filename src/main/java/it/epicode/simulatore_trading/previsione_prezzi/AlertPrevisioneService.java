@@ -15,7 +15,9 @@ public class AlertPrevisioneService {
     private final AzioneRepository azioneRepository;
     private final double sogliaVariazione;
 
-    public AlertPrevisioneService(PrevisionePrezzoRepository previsionePrezzoRepository, AzioneRepository azioneRepository, @Value("${previsione.soglia-variazione}") double sogliaVariazione) {
+    public AlertPrevisioneService(PrevisionePrezzoRepository previsionePrezzoRepository,
+                                  AzioneRepository azioneRepository,
+                                  @Value("${previsione.soglia-variazione}") double sogliaVariazione) {
         this.previsionePrezzoRepository = previsionePrezzoRepository;
         this.azioneRepository = azioneRepository;
         this.sogliaVariazione = sogliaVariazione;
@@ -34,8 +36,10 @@ public class AlertPrevisioneService {
         double variazione = Math.abs((nuovaPrevisione - ultimaPrevisione) / ultimaPrevisione);
 
         if (variazione > this.sogliaVariazione) {
-            return "🚨 ALLERTA: La previsione di " + azione.getNome() + " è cambiata significativamente! Nuovo prezzo previsto: "
-                    + String.format("%.2f", nuovaPrevisione) + "€ (variazione del " + String.format("%.2f", variazione * 100) + "%)";
+            return "🚨 ALLERTA: La previsione di " + azione.getNome() +
+                    " è cambiata significativamente! Nuovo prezzo previsto: "
+                    + String.format("%.2f", nuovaPrevisione) +
+                    "€ (variazione del " + String.format("%.2f", variazione * 100) + "%)";
         }
 
         return "✅ Nessuna variazione significativa per l'azione " + azione.getNome() + ".";

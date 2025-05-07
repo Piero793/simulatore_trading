@@ -22,7 +22,8 @@ public class UtenteService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public UtenteService(UtenteRepository utenteRepository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
+    public UtenteService(UtenteRepository utenteRepository, PasswordEncoder passwordEncoder,
+                         ApplicationEventPublisher eventPublisher) {
         this.utenteRepository = utenteRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
@@ -79,10 +80,6 @@ public class UtenteService {
 
     public Optional<Utente> findByEmail(String email) {
         return utenteRepository.findByEmail(email);
-    }
-
-    public Optional<Utente> findByNome(String nome) {
-        return utenteRepository.findByNome(nome);
     }
 
     public Optional<Utente> findById(Long id) {

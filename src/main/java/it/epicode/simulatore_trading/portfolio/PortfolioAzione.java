@@ -11,7 +11,7 @@ import jakarta.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(PortfolioAzioneId.class) // Indica la classe per la chiave primaria composita
+@IdClass(PortfolioAzioneId.class)
 public class PortfolioAzione {
     @Id
     @ManyToOne
