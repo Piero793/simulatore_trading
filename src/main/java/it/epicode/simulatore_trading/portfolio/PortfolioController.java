@@ -4,7 +4,6 @@ import it.epicode.simulatore_trading.utenti.Utente;
 import it.epicode.simulatore_trading.utenti.UtenteService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,11 +15,13 @@ import java.nio.file.AccessDeniedException;
 @RequestMapping("/api/portfolio")
 public class PortfolioController {
 
-    @Autowired
-    private PortfolioService portfolioService;
+    private final PortfolioService portfolioService;
+    private final UtenteService utenteService;
 
-    @Autowired
-    private UtenteService utenteService;
+    public PortfolioController(PortfolioService portfolioService, UtenteService utenteService) {
+        this.portfolioService = portfolioService;
+        this.utenteService = utenteService;
+    }
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)

@@ -17,16 +17,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
-    /**
-     * Questo metodo viene chiamato quando un utente non autenticato tenta di accedere a un'area protetta.
-     * Invia una risposta HTTP 401 Unauthorized al client.
-     *
-     * @param request La richiesta HTTP in ingresso.
-     * @param response La risposta HTTP in uscita.
-     * @param authException L'eccezione di autenticazione che ha causato l'errore.
-     * @throws IOException Se si verifica un errore di I/O.
-     * @throws ServletException Se si verifica un errore del servlet.
-     */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {

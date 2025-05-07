@@ -20,20 +20,14 @@ public class JwtTokenProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    // Inietta la chiave segreta JWT dal file application.properties
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final String jwtSecret;
+    private final int jwtExpirationMs;
 
-    // Inietta il tempo di scadenza del token JWT in millisecondi dal file application.properties
-    @Value("${jwt.expiration}")
-    private int jwtExpirationMs;
+    public JwtTokenProvider(@Value("${jwt.secret}") String jwtSecret, @Value("${jwt.expiration}") int jwtExpirationMs) {
+        this.jwtSecret = jwtSecret;
+        this.jwtExpirationMs = jwtExpirationMs;
+    }
 
-    /**
-     * Genera un token JWT per un utente autenticato.
-     *
-     * @param authentication L'oggetto Authentication ottenuto da Spring Security dopo un login riuscito.
-     * @return Il token JWT generato.
-     */
     public String generateToken(Authentication authentication) {
         // Ottiene i dettagli dell'utente autenticato
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
@@ -51,22 +45,13 @@ public class JwtTokenProvider {
                 .compact(); // Compatta il token in una stringa
     }
 
-    /**
-     * Restituisce la chiave di firma decodificata.
-     *
-     * @return La chiave segreta JWT.
-     */
+
     private Key key() {
         // Decodifica la chiave segreta dalla stringa base64
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    /**
-     * Estrae lo username (email) dal token JWT.
-     *
-     * @param token Il token JWT.
-     * @return Lo username (email) contenuto nel token.
-     */
+
     public String getUsernameFromToken(String token) {
         // Parsa il token e ottiene i claims
         Claims claims = Jwts.parserBuilder()
@@ -79,12 +64,6 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
-    /**
-     * Valida la firma e la scadenza del token JWT.
-     *
-     * @param authToken Il token JWT da validare.
-     * @return true se il token è valido, false altrimenti.
-     */
     public boolean validateToken(String authToken) {
         try {
             // Parsa e verifica la firma del token

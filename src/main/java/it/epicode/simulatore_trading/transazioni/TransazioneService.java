@@ -4,15 +4,12 @@ import it.epicode.simulatore_trading.azioni.Azione;
 import it.epicode.simulatore_trading.azioni.AzioneRepository;
 import it.epicode.simulatore_trading.exceptions.ExceptionHandlerClass;
 import it.epicode.simulatore_trading.portfolio.Portfolio;
-import it.epicode.simulatore_trading.portfolio.PortfolioAzioneRepository;
-import it.epicode.simulatore_trading.portfolio.PortfolioRepository;
 import it.epicode.simulatore_trading.utenti.Utente;
 import it.epicode.simulatore_trading.utenti.UtenteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,20 +22,17 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TransazioneService {
 
-    @Autowired
-    private TransazioneRepository transazioneRepository;
+    private final TransazioneRepository transazioneRepository;
+    private final AzioneRepository azioneRepository;
+    private final UtenteRepository utenteRepository;
+    private final TradingService tradingService;
 
-    @Autowired
-    private AzioneRepository azioneRepository;
-
-    @Autowired
-    private PortfolioRepository portfolioRepository;
-
-    @Autowired
-    private UtenteRepository utenteRepository;
-
-    @Autowired
-    private PortfolioAzioneRepository portfolioAzioneRepository;
+    public TransazioneService(TransazioneRepository transazioneRepository, AzioneRepository azioneRepository, UtenteRepository utenteRepository, TradingService tradingService) {
+        this.transazioneRepository = transazioneRepository;
+        this.azioneRepository = azioneRepository;
+        this.utenteRepository = utenteRepository;
+        this.tradingService = tradingService;
+    }
 
     /**
      * Recupera tutte le transazioni per l'utente specificato tramite ID utente.
@@ -63,15 +57,10 @@ public class TransazioneService {
         }).collect(Collectors.toList());
     }
 
-    /**
-     * Registra una nuova transazione di acquisto o vendita per l'utente autenticato.
-     *
-     * @param request Oggetto TransazioneRequest contenente i dettagli della transazione.
-     * @param userId  ID dell'utente autenticato che sta effettuando la transazione.
-     * @return Oggetto TransazioneResponse della transazione salvata.
-     */
+
     @Transactional
-    public TransazioneResponse salvaTransazione(TransazioneRequest request, Long userId) throws AccessDeniedException {
+    public TransazioneResponse salvaTransazione(TransazioneRequest request, Long userId) throws AccessDeniedException,
+            ExceptionHandlerClass.InsufficientBalanceException, ExceptionHandlerClass.InsufficientQuantityException {
         log.info("Salvataggio transazione per utente con ID: {}", userId);
 
         Utente utente = utenteRepository.findById(userId)
@@ -83,34 +72,12 @@ public class TransazioneService {
         }
 
         if (!portfolio.getId().equals(request.getPortfolioId())) {
-            log.warn("Tentativo di transazione sull'portfolio {} da parte dell'utente {}, ma non corrispondono.", request.getPortfolioId(), userId);
+            log.warn("Tentativo di transazione sul portfolio {} da parte dell'utente {}, ma non corrispondono.", request.getPortfolioId(), userId);
             throw new AccessDeniedException("Accesso negato a questo portfolio.");
         }
 
         Azione azione = azioneRepository.findById(request.getAzioneId())
                 .orElseThrow(() -> new EntityNotFoundException("Azione non trovata con ID: " + request.getAzioneId()));
-
-        double valoreTotale = (double) request.getQuantita() * azione.getValoreAttuale();
-
-        // Logica di acquisto
-        if ("Acquisto".equalsIgnoreCase(request.getTipoTransazione())) {
-            if (utente.getSaldo() == null || utente.getSaldo() < valoreTotale) {
-                throw new ExceptionHandlerClass.InsufficientBalanceException("Saldo insufficiente per l'acquisto! Saldo attuale: " + utente.getSaldo());
-            }
-            utente.setSaldo(utente.getSaldo() - valoreTotale);
-            portfolio.aggiungiAzione(azione, request.getQuantita());
-        }
-        // Logica di vendita
-        else if ("Vendita".equalsIgnoreCase(request.getTipoTransazione())) {
-            int quantitaPosseduta = portfolio.getQuantitaAzione(azione);
-            if (request.getQuantita() > quantitaPosseduta) {
-                throw new ExceptionHandlerClass.InsufficientQuantityException("Quantità insufficiente di azioni per la vendita! Possedute: " + quantitaPosseduta);
-            }
-            utente.setSaldo(utente.getSaldo() + valoreTotale);
-            portfolio.aggiungiAzione(azione, -request.getQuantita());
-        } else {
-            throw new ConstraintViolationException("Errore: Tipo di transazione non valido!", null);
-        }
 
         Transazione nuovaTransazione = new Transazione();
         BeanUtils.copyProperties(request, nuovaTransazione);
@@ -118,10 +85,16 @@ public class TransazioneService {
         nuovaTransazione.setUtente(utente);
         nuovaTransazione.setPortfolio(portfolio);
 
-        Transazione salvata = transazioneRepository.save(nuovaTransazione);
+        // Delega la logica di business al TradingService
+        if ("Acquisto".equalsIgnoreCase(request.getTipoTransazione())) {
+            tradingService.eseguiAcquisto(utente, portfolio, azione, request.getQuantita());
+        } else if ("Vendita".equalsIgnoreCase(request.getTipoTransazione())) {
+            tradingService.eseguiVendita(utente, portfolio, azione, request.getQuantita());
+        } else {
+            throw new ConstraintViolationException("Errore: Tipo di transazione non valido!", null);
+        }
 
-        utenteRepository.save(utente);
-        portfolioRepository.save(portfolio);
+        Transazione salvata = transazioneRepository.save(nuovaTransazione);
 
         TransazioneResponse response = new TransazioneResponse();
         BeanUtils.copyProperties(salvata, response);

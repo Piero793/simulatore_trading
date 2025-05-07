@@ -8,4 +8,5 @@ public class PortfolioAzioneId implements Serializable {
     private Long portfolio;
     private Long azione;
 
+    public PortfolioAzioneId() {}
 }

@@ -16,8 +16,18 @@ public class UtenteResponse {
     private String imgUrl;
     private Double saldo;
     private Long portfolioId;
+    private Utente.Ruolo ruolo;
 
     // Costruttore parziale opzionale
+    public UtenteResponse(Long id, String nome, String cognome, String email, Long portfolioId, Utente.Ruolo ruolo) {
+        this.id = id;
+        this.nome = nome;
+        this.cognome = cognome;
+        this.email = email;
+        this.portfolioId = portfolioId;
+        this.ruolo = ruolo;
+    }
+
     public UtenteResponse(Long id, String nome, String cognome, String email, Long portfolioId) {
         this.id = id;
         this.nome = nome;
@@ -26,4 +36,3 @@ public class UtenteResponse {
         this.portfolioId = portfolioId;
     }
 }
-

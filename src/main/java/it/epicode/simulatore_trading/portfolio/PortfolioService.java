@@ -11,7 +11,6 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,18 +22,17 @@ public class PortfolioService {
 
     private static final Logger logger = LoggerFactory.getLogger(PortfolioService.class);
 
-    @Autowired
-    private PortfolioRepository portfolioRepository;
+    private final PortfolioRepository portfolioRepository;
+    private final AzioneRepository azioneRepository;
+    private final PortfolioAzioneRepository portfolioAzioneRepository;
+    private final UtenteRepository utenteRepository;
 
-    @Autowired
-    private AzioneRepository azioneRepository;
-
-    @Autowired
-    private PortfolioAzioneRepository portfolioAzioneRepository;
-
-    @Autowired
-    private UtenteRepository utenteRepository;
-
+    public PortfolioService(PortfolioRepository portfolioRepository, AzioneRepository azioneRepository, PortfolioAzioneRepository portfolioAzioneRepository, UtenteRepository utenteRepository) {
+        this.portfolioRepository = portfolioRepository;
+        this.azioneRepository = azioneRepository;
+        this.portfolioAzioneRepository = portfolioAzioneRepository;
+        this.utenteRepository = utenteRepository;
+    }
 
     public PortfolioResponse getPortfolioByUserId(Long userId) {
         logger.info("Inizio recupero portfolio per l'utente con ID: {}", userId);
@@ -72,10 +70,10 @@ public class PortfolioService {
                 ))
                 .collect(Collectors.toList()));
 
+
         logger.info("Recupero portfolio completato con successo per l'utente con ID: {}", userId);
         return response;
     }
-
 
     @Transactional
     public PortfolioResponse creaPortfolio(Utente utente) {
@@ -98,7 +96,6 @@ public class PortfolioService {
         Portfolio salvato = portfolioRepository.save(nuovoPortfolio);
         logger.info("Portfolio salvato con ID: {} e associato all'utente ID: {}", salvato.getId(), utente.getId());
 
-
         PortfolioResponse response = new PortfolioResponse();
         BeanUtils.copyProperties(salvato, response);
         response.setAzioni(new ArrayList<>());
@@ -107,7 +104,6 @@ public class PortfolioService {
         logger.info("Creazione portfolio completata con successo per l'utente con ID: {}", utente.getId());
         return response;
     }
-
 
     @Transactional
     public PortfolioResponse aggiungiAzione(Long portfolioId, Long azioneId, int quantita, Long userId) {
@@ -129,7 +125,6 @@ public class PortfolioService {
             logger.warn("Tentativo di aggiungere/rimuovere quantità zero di azione ID {} al portfolio ID {}", azioneId, portfolioId);
             return getPortfolioByUserId(userId);
         }
-
 
         Optional<PortfolioAzione> existingPortfolioAzioneOptional = portfolioAzioneRepository.findByPortfolioAndAzione(portfolio, azione);
 
@@ -166,10 +161,9 @@ public class PortfolioService {
         return getPortfolioByUserId(userId);
     }
 
-
     // Metodo per trovare un portfolio per ID (utile se necessario)
     public Optional<Portfolio> findById(Long id) {
         return portfolioRepository.findById(id);
     }
-
 }
+
