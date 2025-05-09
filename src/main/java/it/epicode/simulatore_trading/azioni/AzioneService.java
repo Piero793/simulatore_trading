@@ -1,8 +1,6 @@
 package it.epicode.simulatore_trading.azioni;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ConstraintViolationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +9,11 @@ import java.util.stream.Collectors;
 @Service
 public class AzioneService {
 
-    @Autowired
-    private AzioneRepository azioneRepository;
+    private final AzioneRepository azioneRepository;
+
+    public AzioneService(AzioneRepository azioneRepository) {
+        this.azioneRepository = azioneRepository;
+    }
 
     public List<AzioneResponse> getAzioni() {
         List<Azione> azioni = azioneRepository.findAll();
@@ -33,13 +34,6 @@ public class AzioneService {
     }
 
     public AzioneResponse salvaAzione(AzioneRequest request) {
-        if (request.getNome() == null || request.getNome().isEmpty()) {
-            throw new ConstraintViolationException("Il nome dell'azione è obbligatorio!", null);
-        }
-        if (request.getQuantita() < 0) {
-            throw new ConstraintViolationException("La quantità non può essere negativa!", null);
-        }
-
         Azione nuovaAzione = new Azione(
                 null,
                 request.getNome(),

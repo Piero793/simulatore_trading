@@ -8,11 +8,9 @@ import it.epicode.simulatore_trading.utenti.Utente;
 import it.epicode.simulatore_trading.utenti.UtenteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,47 +22,44 @@ public class PortfolioService {
 
     private static final Logger logger = LoggerFactory.getLogger(PortfolioService.class);
 
+    private final PortfolioRepository portfolioRepository;
+    private final AzioneRepository azioneRepository;
+    private final PortfolioAzioneRepository portfolioAzioneRepository;
+    private final UtenteRepository utenteRepository;
 
-    @Autowired
-    private PortfolioRepository portfolioRepository;
+    public PortfolioService(PortfolioRepository portfolioRepository, AzioneRepository azioneRepository,
+                            PortfolioAzioneRepository portfolioAzioneRepository, UtenteRepository utenteRepository) {
+        this.portfolioRepository = portfolioRepository;
+        this.azioneRepository = azioneRepository;
+        this.portfolioAzioneRepository = portfolioAzioneRepository;
+        this.utenteRepository = utenteRepository;
+    }
 
-    @Autowired
-    private AzioneRepository azioneRepository;
+    public PortfolioResponse getPortfolioByUserId(Long userId) {
+        logger.info("Inizio recupero portfolio per l'utente con ID: {}", userId);
 
-    @Autowired
-    private PortfolioAzioneRepository portfolioAzioneRepository;
-
-    @Autowired
-    private UtenteRepository utenteRepository;
-
-
-    public PortfolioResponse getPortfolio(String nomeUtente) {
-        logger.info("Inizio recupero portfolio per l'utente (tramite ricerca Utente per nome): {}", nomeUtente);
-
-        // 1. Trova l'utente per nome
-        logger.info("Ricerca Utente con nome: {}", nomeUtente);
-        Utente utente = utenteRepository.findByNome(nomeUtente)
+        // 1. Trova l'utente per ID
+        logger.info("Ricerca Utente con ID: {}", userId);
+        Utente utente = utenteRepository.findById(userId)
                 .orElseThrow(() -> {
-                    logger.error("ERRORE: Utente NON trovato durante recupero portfolio per nome: {}", nomeUtente);
-                    return new EntityNotFoundException("Utente non trovato per nome: " + nomeUtente);
+                    logger.error("ERRORE: Utente NON trovato durante recupero portfolio per ID: {}", userId);
+                    return new EntityNotFoundException("Utente non trovato con ID: " + userId);
                 });
 
         logger.info("Utente trovato con ID: {} per il recupero portfolio.", utente.getId());
 
-        // 2. Accedi al portfolio tramite la relazione OneToOne sull'entità Utente
         logger.info("Accesso al portfolio associato all'utente ID: {}", utente.getId());
         Portfolio portfolio = utente.getPortfolio();
 
         if (portfolio == null) {
-            logger.error("ERRORE: Portfolio NON associato all'utente ID: {} (nome: {})", utente.getId(), nomeUtente);
-            throw new EntityNotFoundException("Portfolio non trovato per l'utente: " + nomeUtente);
+            logger.error("ERRORE: Portfolio NON associato all'utente ID: {} (ID utente: {})", utente.getId(), userId);
+            throw new EntityNotFoundException("Portfolio non trovato per l'utente con ID: " + userId);
         }
 
-        logger.info("Portfolio trovato con ID: {} associato all'utente: {}", portfolio.getId(), nomeUtente);
+        logger.info("Portfolio trovato con ID: {} associato all'utente ID: {}", portfolio.getId(), userId);
 
         PortfolioResponse response = new PortfolioResponse();
         BeanUtils.copyProperties(portfolio, response);
-        // Mappa le PortfolioAzione in AzioneResponse includendo la quantità
         response.setAzioni(portfolio.getPortfolioAzioni().stream()
                 .map(pa -> new AzioneResponse(
                         pa.getAzione().getId(),
@@ -75,60 +70,45 @@ public class PortfolioService {
                 ))
                 .collect(Collectors.toList()));
 
-        logger.info("Recupero portfolio completato con successo per l'utente: {}", nomeUtente);
+
+        logger.info("Recupero portfolio completato con successo per l'utente con ID: {}", userId);
         return response;
     }
 
+    @Transactional
+    public PortfolioResponse creaPortfolio(Utente utente) {
+        logger.info("Inizio creazione portfolio per l'utente con ID: {}", utente.getId());
 
-    @Transactional // Assicurati che questo metodo sia transazionale
-    public PortfolioResponse creaPortfolio(PortfolioRequest request) {
-        logger.info("Inizio creazione portfolio per l'utente: {}", request.getNomeUtente());
-
-        if (request.getNomeUtente() == null || request.getNomeUtente().isEmpty()) {
-            logger.error("Errore creazione portfolio: Il nome utente nella request è vuoto.");
-            throw new ConstraintViolationException("Il nome utente non può essere vuoto!", null);
-        }
-
-        // 1. Trova l'utente per nome
-        logger.info("Ricerca Utente per creare portfolio con nome: {}", request.getNomeUtente());
-        Utente utente = utenteRepository.findByNome(request.getNomeUtente())
-                .orElseThrow(() -> {
-                    logger.error("ERRORE: Utente NON trovato durante creazione portfolio per nome: {}", request.getNomeUtente());
-                    return new EntityNotFoundException("Utente non trovato per creare portfolio: " + request.getNomeUtente());
-                });
-
-        // 2. Verifica se l'utente ha già un portfolio associato
+        // 1. Verifica se l'utente ha già un portfolio associato
         if (utente.getPortfolio() != null) {
             logger.warn("Tentativo di creare un portfolio per un utente che ne ha già uno. Utente ID: {}", utente.getId());
             throw new ExceptionHandlerClass.EmailAlreadyExistsException("Esiste già un portfolio per questo utente!");
         }
 
-        // 3. Crea un nuovo portfolio
+        // 2. Crea un nuovo portfolio
         Portfolio nuovoPortfolio = new Portfolio();
 
-        // 4. Associa il nuovo portfolio all'utente
+        // 3. Associa il nuovo portfolio all'utente
         nuovoPortfolio.setUtente(utente);
         utente.setPortfolio(nuovoPortfolio);
 
-        // 5. Salva il nuovo portfolio
+        // 4. Salva il nuovo portfolio
         Portfolio salvato = portfolioRepository.save(nuovoPortfolio);
         logger.info("Portfolio salvato con ID: {} e associato all'utente ID: {}", salvato.getId(), utente.getId());
 
-
         PortfolioResponse response = new PortfolioResponse();
-        // Copia le proprietà dal portfolio salvato alla response
         BeanUtils.copyProperties(salvato, response);
         response.setAzioni(new ArrayList<>());
         response.setId(salvato.getId());
 
-        logger.info("Creazione portfolio completata con successo per l'utente: {}", utente.getNome());
+        logger.info("Creazione portfolio completata con successo per l'utente con ID: {}", utente.getId());
         return response;
     }
 
-
     @Transactional
-    public PortfolioResponse aggiungiAzione(Long portfolioId, Long azioneId, int quantita) {
-        logger.info("Inizio aggiunta/aggiornamento azione ID {} con quantità {} al portfolio ID {}", azioneId, quantita, portfolioId);
+    public PortfolioResponse aggiungiAzione(Long portfolioId, Long azioneId, int quantita, Long userId) {
+        logger.info("Inizio aggiunta/aggiornamento azione ID {} con quantità {} al portfolio ID {} per utente ID {}",
+                azioneId, quantita, portfolioId, userId);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> {
@@ -143,12 +123,13 @@ public class PortfolioService {
 
         // Se la quantità è 0, non facciamo nulla
         if (quantita == 0) {
-            logger.warn("Tentativo di aggiungere/rimuovere quantità zero di azione ID {} al portfolio ID {}", azioneId, portfolioId);
-            return getPortfolio(portfolio.getUtente().getNome());
+            logger.warn("Tentativo di aggiungere/rimuovere quantità zero di azione ID {} al portfolio ID {}",
+                    azioneId, portfolioId);
+            return getPortfolioByUserId(userId);
         }
 
-
-        Optional<PortfolioAzione> existingPortfolioAzioneOptional = portfolioAzioneRepository.findByPortfolioAndAzione(portfolio, azione);
+        Optional<PortfolioAzione> existingPortfolioAzioneOptional =
+                portfolioAzioneRepository.findByPortfolioAndAzione(portfolio, azione);
 
         if (existingPortfolioAzioneOptional.isPresent()) {
             // Se esiste, aggiorna la quantità
@@ -158,12 +139,14 @@ public class PortfolioService {
             if (nuovaQuantita > 0) {
                 existingPortfolioAzione.setQuantita(nuovaQuantita);
                 portfolioAzioneRepository.save(existingPortfolioAzione);
-                logger.info("Aggiornata quantità azione ID {} nel portfolio ID {}. Nuova quantità: {}", azioneId, portfolioId, nuovaQuantita);
+                logger.info("Aggiornata quantità azione ID {} nel portfolio ID {}. Nuova quantità: {}",
+                        azioneId, portfolioId, nuovaQuantita);
             } else {
                 // Se la nuova quantità è zero o negativa, rimuovi l'associazione
                 portfolioAzioneRepository.delete(existingPortfolioAzione);
                 portfolio.getPortfolioAzioni().remove(existingPortfolioAzione);
-                logger.info("Rimossa azione ID {} dal portfolio ID {} (quantità scesa a zero/negativa)", azioneId, portfolioId);
+                logger.info("Rimossa azione ID {} dal portfolio ID {} (quantità scesa a zero/negativa)",
+                        azioneId, portfolioId);
             }
         } else {
             // Se non esiste, crea una nuova PortfolioAzione (solo se la quantità da aggiungere è positiva)
@@ -171,7 +154,8 @@ public class PortfolioService {
                 PortfolioAzione nuovaPortfolioAzione = new PortfolioAzione(portfolio, azione, quantita);
                 portfolioAzioneRepository.save(nuovaPortfolioAzione);
                 portfolio.getPortfolioAzioni().add(nuovaPortfolioAzione);
-                logger.info("Aggiunta nuova azione ID {} con quantità {} al portfolio ID {}", azioneId, quantita, portfolioId);
+                logger.info("Aggiunta nuova azione ID {} con quantità {} al portfolio ID {}",
+                        azioneId, quantita, portfolioId);
             } else {
                 // Tentativo di vendere un'azione che l'utente non possiede
                 logger.error("Errore aggiunta azione: Tentativo di vendere azione ID {} che l'utente non possiede nel portfolio ID {}", azioneId, portfolioId);
@@ -180,13 +164,12 @@ public class PortfolioService {
         }
 
         logger.info("Recupero portfolio aggiornato dopo aggiunta/rimozione azione...");
-        return getPortfolio(portfolio.getUtente().getNome());
+        return getPortfolioByUserId(userId);
     }
 
-
-    // Metodo per trovare un portfolio per ID (utile se necessario)
+    // Metodo per trovare un portfolio per ID
     public Optional<Portfolio> findById(Long id) {
         return portfolioRepository.findById(id);
     }
-
 }
+

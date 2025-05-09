@@ -29,5 +29,5 @@ public class Transazione {
     private Utente utente;
 
     @ManyToOne
-    private Portfolio portfolio; // Una transazione appartiene a un portfolio
+    private Portfolio portfolio;
 }

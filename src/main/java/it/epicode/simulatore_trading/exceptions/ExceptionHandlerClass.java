@@ -3,6 +3,9 @@ package it.epicode.simulatore_trading.exceptions;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -20,11 +23,17 @@ import java.util.Map;
 @ControllerAdvice
 public class ExceptionHandlerClass extends ResponseEntityExceptionHandler {
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ErrorResponse {
+        private String message;
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> entityNotFound(EntityNotFoundException ex) {
         return new ResponseEntity<>("Entity not found | " + ex.getMessage(), HttpStatus.NOT_FOUND);
     }
-
 
     // validazione da service
     @ExceptionHandler(ConstraintViolationException.class)
@@ -66,13 +75,13 @@ public class ExceptionHandlerClass extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(InsufficientBalanceException.class)
-    public ResponseEntity<String> insufficientBalance(InsufficientBalanceException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ErrorResponse> insufficientBalance(InsufficientBalanceException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InsufficientQuantityException.class)
-    public ResponseEntity<String> insufficientQuantity(InsufficientQuantityException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ErrorResponse> insufficientQuantity(InsufficientQuantityException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     // Eccezione per indicare che un'email è già registrata
@@ -83,7 +92,7 @@ public class ExceptionHandlerClass extends ResponseEntityExceptionHandler {
     }
 
     // Eccezione per indicare che non è stato trovato un portfolio per un utente
-    public class PortfolioNotFoundException extends EntityNotFoundException {
+    public static class PortfolioNotFoundException extends EntityNotFoundException {
         public PortfolioNotFoundException(String message) {
             super(message);
         }

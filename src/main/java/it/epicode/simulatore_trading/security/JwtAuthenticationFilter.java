@@ -22,19 +22,17 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsService userDetailsService;
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userDetailsService = userDetailsService;
+    }
 
-    /**
-     * Intercetta le richieste HTTP per estrarre e validare il token JWT.
-     *
-     * @param request La richiesta HTTP in ingresso.
-     * @param response La risposta HTTP in uscita.
-     * @param filterChain La catena di filtri.
-     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -81,13 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Estrae il token JWT dall'header 'Authorization' della richiesta.
-     * Si aspetta il formato "Bearer TOKEN".
-     *
-     * @param request La richiesta HTTP.
-     * @return Il token JWT o null se non presente o non nel formato corretto.
-     */
+
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         // Controlla se l'header Authorization è presente e inizia con "Bearer "
@@ -97,6 +89,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null; // Nessun token trovato
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 }

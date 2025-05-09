@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface PrevisionePrezzoRepository extends JpaRepository<PrevisionePrezzo, Long> {
     List<PrevisionePrezzo> findByAzione(Azione azione);
+    List<PrevisionePrezzo> findByAzioneOrderByGiornoAsc(Azione azione);
 }

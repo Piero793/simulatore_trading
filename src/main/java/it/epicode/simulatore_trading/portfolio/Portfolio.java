@@ -23,13 +23,12 @@ public class Portfolio {
     private Long id;
 
     @OneToOne(mappedBy = "portfolio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Utente utente; // Un portfolio appartiene a un utente
+    private Utente utente;
 
 
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PortfolioAzione> portfolioAzioni = new ArrayList<>();
 
-    // Un portfolio può avere molte transazioni
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transazione> transazioni = new ArrayList<>();
 
@@ -49,19 +48,6 @@ public class Portfolio {
                 );
     }
 
-    public void rimuoviAzione(Azione azione) {
-        portfolioAzioni.removeIf(pa -> pa.getAzione().equals(azione));
-    }
-
-    // Metodo per aggiornare la quantità di un'azione esistente nel portfolio
-    public void aggiornaQuantitaAzione(Azione azione, int nuovaQuantita) {
-        portfolioAzioni.stream()
-                .filter(pa -> pa.getAzione().equals(azione))
-                .findFirst()
-                .ifPresent(pa -> pa.setQuantita(nuovaQuantita));
-    }
-
-
     public int getQuantitaAzione(Azione azione) {
         return portfolioAzioni.stream()
                 .filter(pa -> pa.getAzione().equals(azione))
@@ -70,7 +56,7 @@ public class Portfolio {
                 .orElse(0);
     }
 
-    // Metodo per ottenere la lista di azioni (potrebbe essere utile per la response)
+    // Metodo per ottenere la lista di azioni
     public List<Azione> getAzioni() {
         return portfolioAzioni.stream()
                 .map(PortfolioAzione::getAzione)
