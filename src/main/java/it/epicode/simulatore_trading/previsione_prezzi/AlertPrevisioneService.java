@@ -29,19 +29,19 @@ public class AlertPrevisioneService {
 
         List<PrevisionePrezzo> datiStorici = previsionePrezzoRepository.findByAzione(azione);
 
-        if (datiStorici.size() < 2) return "❌ Nessun dato sufficiente per verificare la variazione!";
+        if (datiStorici.size() < 2) return " Nessun dato sufficiente per verificare la variazione!";
 
         double ultimaPrevisione = datiStorici.get(datiStorici.size() - 2).getPrezzoPrevisto();
         double nuovaPrevisione = datiStorici.getLast().getPrezzoPrevisto();
         double variazione = Math.abs((nuovaPrevisione - ultimaPrevisione) / ultimaPrevisione);
 
         if (variazione > this.sogliaVariazione) {
-            return "🚨 ALLERTA: La previsione di " + azione.getNome() +
+            return " INFO: La previsione di " + azione.getNome() +
                     " è cambiata significativamente! Nuovo prezzo previsto: "
                     + String.format("%.2f", nuovaPrevisione) +
                     "€ (variazione del " + String.format("%.2f", variazione * 100) + "%)";
         }
 
-        return "✅ Nessuna variazione significativa per l'azione " + azione.getNome() + ".";
+        return " Nessuna variazione significativa per l'azione " + azione.getNome() + ".";
     }
 }

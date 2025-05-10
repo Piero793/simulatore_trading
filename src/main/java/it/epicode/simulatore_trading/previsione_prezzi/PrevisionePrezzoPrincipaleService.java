@@ -45,7 +45,7 @@ public class PrevisionePrezzoPrincipaleService {
             logger.info("Nuovo prezzo registrato per {}: {}", azione.getNome(), nuovoPrezzo);
 
             String messaggioAllerta = alertPrevisioneService.verificaPrevisione(azione.getId());
-            if (messaggioAllerta.startsWith("🚨")) {
+            if (messaggioAllerta.startsWith("INFO:")) {
                 logger.warn(messaggioAllerta);
             } else {
                 logger.info(messaggioAllerta);
