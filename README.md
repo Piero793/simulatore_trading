@@ -33,7 +33,7 @@ Per buildare il backend utilizzando Maven, esegui il seguente comando nella root
 ```bash
 mvn clean install
 ```
-Esecuzione del Backend
+## Esecuzione del Backend
 Puoi eseguire l'applicazione backend in diversi modi:
 
 Tramite IntelliJ IDEA: Apri il progetto in IntelliJ IDEA ed esegui la classe principale it.epicode.simulatore_trading.SimulatoreTradingApplication. Assicurati di aver configurato le variabili d'ambiente nella configurazione di esecuzione/debug dell'IDE.
