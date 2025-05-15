@@ -10,4 +10,4 @@ WORKDIR /app
 COPY --from=build /app/target/simulatore_trading-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Djwt.secret=$JWT_SECRET -Djwt.expiration=18000000 -jar app.jar"]
