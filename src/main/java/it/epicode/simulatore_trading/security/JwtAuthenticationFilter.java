@@ -37,45 +37,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        if (path.equals("/api/auth/login") || path.equals("/api/utenti/register")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            // 1. Estrae il token JWT dall'header 'Authorization'
             String jwt = getJwtFromRequest(request);
 
-            // 2. Se il token esiste ed è valido
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                // 3. Estrae lo username (email) dal token
                 String username = jwtTokenProvider.getUsernameFromToken(jwt);
-
-                // 4. Carica i dettagli dell'utente usando lo username
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                // 5. Se i dettagli dell'utente sono stati caricati con successo
-                // e l'utente non è già autenticato nel contesto di sicurezza corrente
                 if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                    // 6. Crea un oggetto di autenticazione per Spring Security
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null, // Credenziali (non necessarie dopo la validazione del token)
-                            userDetails.getAuthorities()); // Autorità (ruoli)
+                            userDetails, null, userDetails.getAuthorities());
 
-                    // 7. Imposta i dettagli della richiesta nell'oggetto di autenticazione
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // 8. Imposta l'oggetto di autenticazione nel contesto di sicurezza di Spring
-                    // Questo indica a Spring Security che l'utente è autenticato per questa richiesta
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
         } catch (Exception ex) {
-            // In caso di errori (token non valido, utente non trovato, ecc.)
-            // Spring Security gestirà l'errore tramite l'AuthenticationEntryPoint configurato
-            // Non impostiamo l'autenticazione nel contesto, lasciando che la catena di filtri
-            // proceda e venga intercettata dall'AuthenticationEntryPoint se l'endpoint è protetto.
             logger.error("Could not set user authentication in security context", ex);
         }
 
-        // 9. Continua la catena di filtri
         filterChain.doFilter(request, response);
     }
 
